@@ -277,6 +277,8 @@ func (p *planner) newPlan(
 		return p.CreateView(ctx, n)
 	case *parser.Delete:
 		return p.Delete(ctx, n, desiredTypes)
+	case *parser.Discard:
+		return p.Discard(ctx, n)
 	case *parser.DropDatabase:
 		return p.DropDatabase(ctx, n)
 	case *parser.DropIndex:
