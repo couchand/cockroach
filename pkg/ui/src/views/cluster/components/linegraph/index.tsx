@@ -4,10 +4,11 @@ import moment from "moment";
 import * as nvd3 from "nvd3";
 import { createSelector } from "reselect";
 
+import * as protos from "src/js/protos";
 import { HoverState, hoverOn, hoverOff } from "src/redux/hover";
 import { findChildrenOfType } from "src/util/find";
 import {
-  ConfigureLineChart, InitLineChart, CHART_MARGINS,
+  ConfigureLineChart, CHART_MARGINS,
 } from "src/views/cluster/util/graphs";
 import {
   Metric, MetricProps, Axis, AxisProps,
@@ -15,6 +16,12 @@ import {
 import { MetricsDataComponentProps } from "src/views/shared/components/metricQuery";
 import Visualization from "src/views/cluster/components/visualization";
 import { NanoToMilli } from "src/util/convert";
+
+// Global set of colors for graph series.
+const seriesPalette = [
+  "#5F6C87", "#F2BE2C", "#F16969", "#4E9FD1", "#49D990", "#D77FBF", "#87326D", "#A3415B",
+  "#B59153", "#C9DB6D", "#203D9B", "#748BF2", "#91C8F2", "#FF9696", "#EF843C", "#DCCD4B",
+];
 
 interface LineGraphProps extends MetricsDataComponentProps {
   title?: string;
@@ -66,8 +73,18 @@ export class LineGraph extends React.Component<LineGraphProps, {}> {
       return;
     }
 
-    this.chart = nvd3.models.lineChart();
-    InitLineChart(this.chart);
+    this.chart = nvd3.models.lineChart()
+      .x((d: protos.cockroach.ts.tspb.TimeSeriesDatapoint) => new Date(NanoToMilli(d && d.timestamp_nanos.toNumber())))
+      .y((d: protos.cockroach.ts.tspb.TimeSeriesDatapoint) => d && d.value)
+      .useInteractiveGuideline(true)
+      .showLegend(true)
+      .showYAxis(true)
+      .color(seriesPalette)
+      .margin(CHART_MARGINS);
+    this.chart.xAxis
+      .showMaxMin(false);
+    this.chart.yAxis
+      .showMaxMin(true);
 
     if (axis.props.range) {
       this.chart.forceY(axis.props.range);
