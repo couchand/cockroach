@@ -18,6 +18,7 @@ import { AdminUIState } from "src/redux/state";
 import { refreshNodes, refreshLiveness } from "src/redux/apiReducers";
 import { hoverStateSelector, HoverState, hoverOn, hoverOff } from "src/redux/hover";
 import { nodesSummarySelector, NodesSummary } from "src/redux/nodes";
+import HoverThing from "src/views/cluster/containers/hoverThing";
 import Alerts from "src/views/shared/containers/alerts";
 import { MetricsDataProvider } from "src/views/shared/containers/metricDataProvider";
 
@@ -223,6 +224,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
           </div>
         </div>
       </section>
+      <HoverThing />
     </div>;
   }
 }
