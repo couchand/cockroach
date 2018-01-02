@@ -1,32 +1,61 @@
+import { AxisUnits } from "oss/src/views/shared/components/metricQuery";
+import { GraphDashboardProps } from "oss/src/views/cluster/containers/nodeGraphs/dashboards/dashboardUtils";
+
 export type Measure = "count" | "bytes" | "duration";
 
-type Metric = {
+export type Metric = {
   name: string,
+  sources?: string[],
   title?: string,
+  rate?: boolean,
+  nonNegativeRate?: boolean,
+  aggregateMax?: boolean,
+  aggregateMin?: boolean,
+  aggregateAvg?: boolean,
+  downsampleMax?: boolean,
+  downsampleMin?: boolean,
 };
 
-type MetricsChart = {
-  type: "metrics",
-  measure: Measure,
+// Chart representing multiple metrics.
+type MetricsChartConfig = {
   metrics: Metric[],
 };
 
-type NodesChart = {
-  type: "nodes",
-  measure: Measure,
+// Chart representing a single metric across multiple nodes.
+type NodesChartConfig = {
   metric: Metric,
 };
 
-type Chart = MetricsChart | NodesChart;
+export type ChartDataConfig = MetricsChartConfig | NodesChartConfig;
 
-export type ChartConfig = {
-  [key: string]: Chart,
+type CommonChartConfig = {
+  title: string,
+  subtitle?: string,
+  measure: Measure,
+  sources?: string[],
+  tooltip?: string | JSX.Element,
+  axis?: AxisConfig,
 };
 
-export function isMetricsChart(chart: Chart): chart is MetricsChart {
-  return chart.type === "metrics";
-}
+export type AxisConfig = {
+  units?: AxisUnits,
+  label?: string,
+};
 
-export function isNodesChart(chart: Chart): chart is NodesChart {
-  return chart.type === "nodes";
-}
+export type ChartConfig = CommonChartConfig & ChartDataConfig;
+
+export type DashboardConfig = {
+  // Unique identifier for this dashboard, e.g. "nodes.overview"
+  id: string,
+  charts: ChartConfig[],
+};
+
+export type DashboardConfigState = (props: GraphDashboardProps) => DashboardConfig;
+
+// export function isMetricsChart(chart: ChartDataConfig): chart is MetricsChartConfig {
+//   return chart.type === "metrics";
+// }
+//
+// export function isNodesChart(chart: ChartDataConfig): chart is NodesChartConfig {
+//   return chart.type === "nodes";
+// }

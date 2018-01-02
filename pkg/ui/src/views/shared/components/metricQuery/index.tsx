@@ -44,64 +44,6 @@ export enum AxisUnits {
 }
 
 /**
- * AxisProps represents the properties of an Axis being specified as part of a
- * query for metrics.
- */
-export interface AxisProps {
-  label?: string;
-  format?: (n: number) => string;
-  range?: number[];
-  units?: AxisUnits;
-}
-
-/**
- * Axis is a React component which describes an Axis of a metrics query.
- *
- * This component should not be rendered directly; rather, a renderable
- * component should contain axes as children and use them only informationally
- * without rendering them.
- */
-export class Axis extends React.Component<AxisProps, {}> {
-  static defaultProps: AxisProps = {
-    units: AxisUnits.Count,
-  };
-
-  render(): React.ReactElement<any> {
-    throw new Error("Component <Axis /> should never render.");
-  }
-}
-
-/**
- * MetricProps reperesents the properties of a Metric being selected as part of
- * a query.
- */
-export interface MetricProps {
-  name: string;
-  sources?: string[];
-  title?: string;
-  rate?: boolean;
-  nonNegativeRate?: boolean;
-  aggregateMax?: boolean;
-  aggregateMin?: boolean;
-  aggregateAvg?: boolean;
-  downsampleMax?: boolean;
-  downsampleMin?: boolean;
-}
-
-/**
- * Metric is a React component which describes a Metric in a metrics query.
- *
- * This component should not be rendered directly; rather, a renderable
- * component should contain axes as children and use them only informationally
- * without rendering them.
- */
-export class Metric extends React.Component<MetricProps, {}> {
-  render(): React.ReactElement<any> {
-    throw new Error("Component <Metric /> should never render.");
-  }
-}
-
-/**
  * QueryTimeInfo is a convenience structure which contains information about
  * the time range of a metrics query.
  */

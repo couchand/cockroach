@@ -2,29 +2,21 @@ import d3 from "d3";
 import React from "react";
 import moment from "moment";
 import * as nvd3 from "nvd3";
-import { createSelector } from "reselect";
 
 import * as protos from  "src/js/protos";
 import { HoverState, hoverOn, hoverOff } from "src/redux/hover";
-import { findChildrenOfType } from "src/util/find";
 import {
   ConfigureLineChart, InitLineChart, CHART_MARGINS,
 } from "src/views/cluster/util/graphs";
-import {
-  Metric, MetricProps, Axis, AxisProps,
-} from "src/views/shared/components/metricQuery";
 import { MetricsDataComponentProps } from "src/views/shared/components/metricQuery";
 import Visualization from "src/views/cluster/components/visualization";
 import { NanoToMilli } from "src/util/convert";
+import { ChartConfig } from "oss/src/util/charts";
 
 type TSDatapoint = protos.cockroach.ts.tspb.TimeSeriesDatapoint$Properties;
 
 interface LineGraphProps extends MetricsDataComponentProps {
-  title?: string;
-  subtitle?: string;
-  legend?: boolean;
-  xAxis?: boolean;
-  tooltip?: React.ReactNode;
+  config: ChartConfig;
   hoverOn?: typeof hoverOn;
   hoverOff?: typeof hoverOff;
   hoverState?: HoverState;
@@ -73,39 +65,9 @@ export class LineGraph extends React.Component<LineGraphProps, {}> {
   // A configured NVD3 chart used to render the chart.
   chart: nvd3.LineChart;
 
-  axis = createSelector(
-    (props: {children?: React.ReactNode}) => props.children,
-    (children) => {
-      const axes: React.ReactElement<AxisProps>[] = findChildrenOfType(children, Axis);
-      if (axes.length === 0) {
-        console.warn("LineGraph requires the specification of at least one axis.");
-        return null;
-      }
-      if (axes.length > 1) {
-        console.warn("LineGraph currently only supports a single axis; ignoring additional axes.");
-      }
-      return axes[0];
-    });
-
-  metrics = createSelector(
-    (props: {children?: React.ReactNode}) => props.children,
-    (children) => {
-      return findChildrenOfType(children, Metric) as React.ReactElement<MetricProps>[];
-    });
-
   initChart() {
-    const axis = this.axis(this.props);
-    if (!axis) {
-      // TODO: Figure out this error condition.
-      return;
-    }
-
     this.chart = nvd3.models.lineChart();
     InitLineChart(this.chart);
-
-    if (axis.props.range) {
-      this.chart.forceY(axis.props.range);
-    }
   }
 
   mouseMove = (e: any) => {
@@ -163,12 +125,6 @@ export class LineGraph extends React.Component<LineGraphProps, {}> {
     // NOTE: This might not work on Android:
     // http://caniuse.com/#feat=pagevisibility
     if (!document.hidden) {
-      const metrics = this.metrics(this.props);
-      const axis = this.axis(this.props);
-      if (!axis) {
-        return;
-      }
-
       const { currentlyHovering, hoverChart } = this.props.hoverState;
       let hoverTime: moment.Moment;
       let thisChart = false;
@@ -178,7 +134,14 @@ export class LineGraph extends React.Component<LineGraphProps, {}> {
       }
 
       ConfigureLineChart(
-        this.chart, this.graphEl, metrics, axis, this.props.data, this.props.timeInfo, hoverTime, thisChart,
+        this.chart,
+        this.graphEl,
+        this.props.config.metrics || [this.props.config.metric],
+        this.props.config.axis,
+        this.props.data,
+        this.props.timeInfo,
+        hoverTime,
+        thisChart,
       );
     }
   }
@@ -201,7 +164,8 @@ export class LineGraph extends React.Component<LineGraphProps, {}> {
   }
 
   render() {
-    const { title, subtitle, tooltip, data } = this.props;
+    const { config, data } = this.props;
+    const { title, subtitle, tooltip } = config;
 
     return <Visualization title={title} subtitle={subtitle} tooltip={tooltip} loading={!data} >
       <div className="linegraph">

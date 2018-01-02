@@ -26,29 +26,26 @@ import {
   GraphDashboardProps, storeIDsForNode,
 } from "./dashboards/dashboardUtils";
 
-import overviewDashboard from "./dashboards/overview";
-import runtimeDashboard from "./dashboards/runtime";
+// import overviewDashboard from "./dashboards/overview";
+// import runtimeDashboard from "./dashboards/runtime";
 import sqlDashboard from "./dashboards/sql";
-import storageDashboard from "./dashboards/storage";
-import replicationDashboard from "./dashboards/replication";
-import distributedDashboard from "./dashboards/distributed";
-import queuesDashboard from "./dashboards/queues";
-import requestsDashboard from "./dashboards/requests";
+// import storageDashboard from "./dashboards/storage";
+// import replicationDashboard from "./dashboards/replication";
+// import distributedDashboard from "./dashboards/distributed";
+// import queuesDashboard from "./dashboards/queues";
+// import requestsDashboard from "./dashboards/requests";
+import {DashboardConfigState} from "oss/src/util/charts";
+import {LineGraph} from "oss/src/views/cluster/components/linegraph";
 
-interface GraphDashboard {
-  label: string;
-  component: (props: GraphDashboardProps) => React.ReactElement<any>[];
-}
-
-const dashboards: {[key: string]: GraphDashboard} = {
-  "overview" : { label: "Overview", component: overviewDashboard },
-  "runtime" : { label: "Runtime", component: runtimeDashboard },
-  "sql": { label: "SQL", component: sqlDashboard },
-  "storage": { label: "Storage", component: storageDashboard },
-  "replication": { label: "Replication", component: replicationDashboard },
-  "distributed": { label: "Distributed", component: distributedDashboard },
-  "queues": { label: "Queues", component: queuesDashboard },
-  "requests": { label: "Slow Requests", component: requestsDashboard},
+const dashboards: {[key: string]: DashboardConfigState} = {
+  // "overview" : { label: "Overview", component: overviewDashboard },
+  // "runtime" : { label: "Runtime", component: runtimeDashboard },
+  "sql": sqlDashboard,
+  // "storage": { label: "Storage", component: storageDashboard },
+  // "replication": { label: "Replication", component: replicationDashboard },
+  // "distributed": { label: "Distributed", component: distributedDashboard },
+  // "queues": { label: "Queues", component: queuesDashboard },
+  // "requests": { label: "Slow Requests", component: requestsDashboard},
 };
 
 const defaultDashboard = "overview";
@@ -56,7 +53,7 @@ const defaultDashboard = "overview";
 const dashboardDropdownOptions = _.map(dashboards, (dashboard, key) => {
   return {
     value: key,
-    label: dashboard.label,
+    label: dashboard.name,
   };
 });
 
@@ -179,13 +176,22 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
 
     // Generate graphs for the current dashboard, wrapping each one in a
     // MetricsDataProvider with a unique key.
-    const graphs = dashboards[dashboard].component(dashboardProps);
-    const graphComponents = _.map(graphs, (graph, idx) => {
+    const dashboardConfig = dashboards[dashboard](dashboardProps);
+    const graphComponents = dashboardConfig.charts.map((chartConfig, idx) => {
       const key = `nodes.${dashboard}.${idx}`;
+      const metrics = chartConfig.metric
+        ? [chartConfig.metric]
+        : chartConfig.metrics;
       return (
         <div key={key}>
           <MetricsDataProvider id={key}>
-            { React.cloneElement(graph, { hoverOn, hoverOff, hoverState, chartKey: key }) }
+            <LineGraph
+              config={chartConfig}
+              hoverOn={hoverOn}
+              hoverOff={hoverOff}
+              hoverState={hoverState}
+              chartKey={key}
+            />
           </MetricsDataProvider>
         </div>
       );

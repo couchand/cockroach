@@ -1,4 +1,3 @@
-import React from "react";
 import _ from "lodash";
 import * as nvd3 from "nvd3";
 import * as d3 from "d3";
@@ -9,8 +8,9 @@ import { NanoToMilli } from "src/util/convert";
 import { ComputePrefixExponent, ComputeByteScale } from "src/util/format";
 
 import {
-  MetricProps, AxisProps, AxisUnits, QueryTimeInfo,
+  AxisUnits, QueryTimeInfo,
 } from "src/views/shared/components/metricQuery";
+import {AxisConfig, Metric} from "oss/src/util/charts";
 
 type TSResponse = protos.cockroach.ts.tspb.TimeSeriesQueryResponse;
 
@@ -237,7 +237,7 @@ type formattedSeries = {
 };
 
 function formatMetricData(
-  metrics: React.ReactElement<MetricProps>[],
+  metrics: Metric[],
   data: TSResponse,
 ): formattedSeries[] {
   const formattedData: formattedSeries[] = [];
@@ -247,7 +247,7 @@ function formatMetricData(
     if (result) {
       formattedData.push({
         values: result.datapoints,
-        key: s.props.title || s.props.name,
+        key: s.title || s.name,
         area: true,
         fillOpacity: 0.1,
         disableTooltip: true,
@@ -280,8 +280,8 @@ export function InitLineChart(chart: nvd3.LineChart) {
 export function ConfigureLineChart(
   chart: nvd3.LineChart,
   svgEl: SVGElement,
-  metrics: React.ReactElement<MetricProps>[],
-  axis: React.ReactElement<AxisProps>,
+  metrics: Metric[],
+  axis: AxisConfig,
   data: TSResponse,
   timeInfo: QueryTimeInfo,
   hoverTime?: moment.Moment,
@@ -295,11 +295,11 @@ export function ConfigureLineChart(
     formattedData = formatMetricData(metrics, data);
 
     xAxisDomain = calculateXAxisDomain(timeInfo);
-    yAxisDomain = calculateYAxisDomain(axis.props.units, data);
+    yAxisDomain = calculateYAxisDomain(axis.units, data);
 
     chart.yDomain(yAxisDomain.extent);
-    if (axis.props.label) {
-      chart.yAxis.axisLabel(`${axis.props.label} (${yAxisDomain.label})`);
+    if (axis.label) {
+      chart.yAxis.axisLabel(`${axis.label} (${yAxisDomain.label})`);
     } else {
       chart.yAxis.axisLabel(yAxisDomain.label);
     }

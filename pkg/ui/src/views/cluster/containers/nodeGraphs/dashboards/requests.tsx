@@ -2,39 +2,42 @@ import React from "react";
 
 import { LineGraph } from "src/views/cluster/components/linegraph";
 import { Metric, Axis } from "src/views/shared/components/metricQuery";
-import { ChartConfig } from "src/util/charts";
+import { DashboardConfig } from "src/util/charts";
 
 import { GraphDashboardProps } from "./dashboardUtils";
 
-export const charts: ChartConfig = {
-  "nodes.requests.0": {
-    type: "metrics",
-    measure: "count",
-    metrics: [
-      { name: "cr.node.requests.slow.distsender", title: "Slow Distsender Requests" },
-    ],
-  },
-  "nodes.requests.1": {
-    type: "metrics",
-    measure: "count",
-    metrics: [
-      { name: "cr.store.requests.slow.raft", title: "Slow Raft Proposals" },
-    ],
-  },
-  "nodes.requests.2": {
-    type: "metrics",
-    measure: "count",
-    metrics: [
-      { name: "cr.store.requests.slow.lease", title: "Slow Lease Acquisitions" },
-    ],
-  },
-  "nodes.requests.3": {
-    type: "metrics",
-    measure: "count",
-    metrics: [
-      { name: "cr.store.requests.slow.commandqueue", title: "Slow Command Queue Entries" },
-    ],
-  },
+export const charts: DashboardConfig = {
+  id: "nodes.requests",
+  charts: [
+    {
+      type: "metrics",
+      measure: "count",
+      metrics: [
+        { name: "cr.node.requests.slow.distsender", title: "Slow Distsender Requests" },
+      ],
+    },
+    {
+      type: "metrics",
+      measure: "count",
+      metrics: [
+        { name: "cr.store.requests.slow.raft", title: "Slow Raft Proposals" },
+      ],
+    },
+    {
+      type: "metrics",
+      measure: "count",
+      metrics: [
+        { name: "cr.store.requests.slow.lease", title: "Slow Lease Acquisitions" },
+      ],
+    },
+    {
+      type: "metrics",
+      measure: "count",
+      metrics: [
+        { name: "cr.store.requests.slow.commandqueue", title: "Slow Command Queue Entries" },
+      ],
+    },
+  ],
 };
 
 export default function (props: GraphDashboardProps) {
