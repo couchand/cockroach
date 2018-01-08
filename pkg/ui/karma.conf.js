@@ -30,6 +30,7 @@ module.exports = function(config) {
       "dist/vendor.dll.js",
       "src/polyfills.ts",
       "src/**/*.spec.*",
+      "ccl/src/**/*.spec.*",
     ],
 
     // frameworks to use
@@ -52,6 +53,7 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       "src/**": ["webpack", "sourcemap"],
+      "ccl/src/**": ["webpack", "sourcemap"],
     },
 
     // test results reporter to use
