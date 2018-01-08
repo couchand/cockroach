@@ -13,7 +13,7 @@ import * as d3 from "d3";
 import * as protos from "src/js/protos";
 
 import { NanoToMilli } from "src/util/convert";
-import { refreshNodes, refreshLiveness } from "src/redux/apiReducers";
+import { refreshNodes, refreshLiveness, refreshLocations } from "src/redux/apiReducers";
 import { nodesSummarySelector, NodesSummary } from "src/redux/nodes";
 import { AdminUIState } from "src/redux/state";
 
@@ -22,28 +22,6 @@ import { ModalLocalitiesView } from "./modalLocalities";
 
 type NodeStatus = protos.cockroach.server.status.NodeStatus$Properties;
 type Tier = protos.cockroach.roachpb.Tier$Properties;
-
-// List of fake location data in order to place nodes on the map for visual
-// effect.
-const locations: [number, number][] = [
-  [-74.00597, 40.71427],
-  [-80.19366, 25.77427],
-  [-93.60911, 41.60054],
-  [-118.24368, 34.05223],
-  [-122.33207, 47.60621],
-  [-0.12574, 51.50853],
-  [13.41053, 52.52437],
-  [18.0649, 59.33258],
-  [151.20732, -33.86785],
-  [144.96332, -37.814],
-  [153.02809, -27.46794],
-  [116.39723, 39.9075],
-  [121.45806, 31.22222],
-  [114.0683, 22.54554],
-  [72.88261, 19.07283],
-  [77.59369, 12.97194],
-  [77.22445, 28.63576],
-];
 
 const localities: Tier[][] = [
   [
@@ -92,6 +70,7 @@ export class SimulatedNodeStatus {
   clientActivityRate: number;
   private statusHistory: NodeStatus[];
   private maxHistory = 2;
+  private location: [number, number];
 
   constructor(initialStatus: NodeStatus) {
     this.statusHistory = [initialStatus];
@@ -117,8 +96,12 @@ export class SimulatedNodeStatus {
     return this.statusHistory[0];
   }
 
+  setLocation(loc: any) {
+    this.location = [loc.longitude, loc.latitude];
+  }
+
   longLat() {
-    return locations[this.id() % locations.length];
+    return this.location;
   }
 
   tiers() {
@@ -168,7 +151,7 @@ class NodeSimulator extends React.Component<NodeSimulatorProps & NodeSimulatorOw
   // accumulateHistory parses incoming nodeStatus properties and accumulates
   // a history for each node.
   accumulateHistory(props = this.props) {
-    if (!props.nodesSummary.nodeStatuses) {
+    if (!props.nodesSummary.nodeStatuses || !props.locations) {
       return;
     }
 
@@ -179,6 +162,8 @@ class NodeSimulator extends React.Component<NodeSimulatorProps & NodeSimulatorOw
       } else {
         this.nodeHistories[id].update(status);
       }
+
+      this.nodeHistories[id].setLocation(props.locations[id % props.locations.length]);
     });
   }
 
@@ -186,12 +171,14 @@ class NodeSimulator extends React.Component<NodeSimulatorProps & NodeSimulatorOw
     this.accumulateHistory();
     this.props.refreshNodes();
     this.props.refreshLiveness();
+    this.props.refreshLocations();
   }
 
   componentWillReceiveProps(props: NodeSimulatorProps & NodeSimulatorOwnProps) {
     this.accumulateHistory(props);
     props.refreshNodes();
     props.refreshLiveness();
+    props.refreshLocations();
   }
 
   render() {
@@ -209,9 +196,11 @@ export default connect(
   (state: AdminUIState, _ownProps: NodeSimulatorOwnProps) => ({
     nodesSummary: nodesSummarySelector(state),
     statusesValid: state.cachedData.nodes.valid && state.cachedData.liveness.valid,
+    locations: state.cachedData.locations.valid && state.cachedData.locations.data.locations,
   }),
   {
     refreshNodes,
     refreshLiveness,
+    refreshLocations,
   },
 )(NodeSimulator);
