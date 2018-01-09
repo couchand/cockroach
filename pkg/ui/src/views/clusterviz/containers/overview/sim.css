@@ -1,0 +1,145 @@
+@import
+url('https://fonts.googleapis.com/css?family=Lato:400,700');
+
+.cluster-viz {
+    width: 100%;
+    height: 100%;
+    background-color: #ececf9;
+}
+
+.locality {
+}
+
+.locality-label {
+    fill: white;
+    stroke-width: 0px;
+    font-size: 10px;
+    font-weight: bold;
+    alignment-baseline: middle;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+.locality-label-background {
+    fill: #595f6c;
+    stroke-width: 0px;
+}
+
+.capacity-background {
+    fill: #daeefa;
+    stroke: #51bbfd;
+    stroke-width: 0.5px;
+}
+
+.capacity-used {
+    fill: #51bbfd;
+    stroke: #daeefa;
+    stroke-width: 0.25px;
+}
+
+.capacity-used.detail {
+    fill: #daeefa;
+    stroke: #51bbfd;
+    stroke-width: 0.5px;
+}
+
+.capacity-used.detail.highlight {
+    fill: #51bbfd;
+    stroke: #daeefa;
+}
+
+.capacity-label {
+    fill: #5abbfd;
+    stroke-width: 0px;
+    font-size: 10px;
+    font-weight: bold;
+    text-anchor: start;
+}
+
+.capacity-used-label {
+    fill: #51bbfd;
+    stroke-width: 0px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.capacity-used-pct-label {
+    fill: #51bbfd;
+    stroke-width: 0px;
+    font-size: 28px;
+    font-weight: medium;
+    alignment-baseline: middle;
+    text-anchor: middle;
+}
+
+.capacity-used-text {
+    fill: #595f6c;
+    stroke-width: 0px;
+    font-size: 9px;
+    font-weight: bold;
+    alignmnent-baseline: middle;
+    text-anchor: middle;
+}
+
+.client-activity {
+    stroke: #d95d4f;
+    stroke-linecap: round;
+    stroke-width: 5px;
+}
+
+.client-activity-label {
+    fill: #d95d4f;
+    stroke-width: 0px;
+    font-size: 10px;
+    font-weight: bold;
+    dominant-baseline: central;
+}
+
+.network-activity {
+    stroke: #152849;
+    stroke-linecap: round;
+    stroke-width: 5px;
+}
+
+.network-activity-label {
+    fill: #152849;
+    stroke-width: 0px;
+    font-size: 10px;
+    font-weight: bold;
+    dominant-baseline: central;
+}
+
+.locality-link {
+    stroke: #ccc;
+    stroke-width: 2px;
+    fill-opacity: 0;
+}
+
+.incoming-throughput-label {
+    fill: #8833cc;
+    stroke-width: 0px;
+    font-size: 10px;
+    text-anchor: end;
+}
+
+.outgoing-throughput-label {
+    fill: #82cc00;
+    stroke-width: 0px;
+    font-size: 10px;
+    text-anchor: end;
+    alignment-baseline: hanging;
+}
+
+.rtt-label {
+    fill: #152849;
+    stroke-width: 0px;
+    font-size: 10px;
+    text-anchor: start;
+    alignment-baseline: middle;
+}
+
+.geopath {
+    fill: #f7f7ff;
+    stroke: #ccc;
+    stroke-width: 0.75px;
+}
