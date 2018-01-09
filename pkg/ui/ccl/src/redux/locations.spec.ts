@@ -1,15 +1,17 @@
 import { assert } from "chai";
 
-import { selectLocations, selectLocationTree } from "./locations";
+import * as protos from "src/js/protos";
+import { Location, selectLocations, selectLocationTree } from "./locations";
 
-function makeStateWithLocations(locationData) {
+function makeStateWithLocations(locationData: Location[]) {
   return {
     cachedData: {
       locations: {
         valid: true,
-        data: {
+        inFlight: false,
+        data: protos.cockroach.server.serverpb.LocationsResponse.fromObject({
           locations: locationData,
-        },
+        }),
       },
     },
   };
@@ -19,7 +21,10 @@ describe("selectLocations", function() {
   it("returns an empty array if location data is missing", function() {
     const state = {
       cachedData: {
-        locations: {},
+        locations: {
+          inFlight: false,
+          valid: false,
+        },
       },
     };
 
@@ -30,8 +35,13 @@ describe("selectLocations", function() {
     const state = {
       cachedData: {
         locations: {
+          inFlight: false,
           valid: false,
-          data: {},
+          data: protos.cockroach.server.serverpb.LocationsResponse.fromObject({
+            locations: [
+              {},
+            ],
+          }),
         },
       },
     };
@@ -40,8 +50,15 @@ describe("selectLocations", function() {
   });
 
   it("returns location data if valid", function() {
-    const locationData = [1, 2, 3];
+    const locationData = [{
+      locality_key: "city",
+      locality_value: "nyc",
+      latitude: 123,
+      longitude: 456,
+    }];
     const state = makeStateWithLocations(locationData);
+
+    //assert(false, JSON.stringify({ real: selectLocations(state), expected: locationData }));
 
     assert.deepEqual(selectLocations(state), locationData);
   });
@@ -61,7 +78,7 @@ describe("selectLocationTree", function() {
       "data-center",
       "rack",
     ];
-    const locations = tiers.map((tier) => ({ localityKey: tier }));
+    const locations = tiers.map((tier) => ({ locality_key: tier }));
     const state = makeStateWithLocations(locations);
 
     assert.hasAllKeys(selectLocationTree(state), tiers);
@@ -77,28 +94,28 @@ describe("selectLocationTree", function() {
       "us-east-1",
       "us-west-1",
     ];
-    const cityLocations = cities.map((city) => ({ localityKey: "city", localityValue: city }));
-    const dcLocations = dataCenters.map((dc) => ({ localityKey: "data-center", localityValue: dc }));
+    const cityLocations = cities.map((city) => ({ locality_key: "city", locality_value: city }));
+    const dcLocations = dataCenters.map((dc) => ({ locality_key: "data-center", locality_value: dc }));
     const state = makeStateWithLocations(cityLocations.concat(dcLocations));
 
     const tree = selectLocationTree(state);
 
     assert.hasAllKeys(tree, ["city", "data-center"]);
-    assert.hasAllKeys(tree["city"], cities);
+    assert.hasAllKeys(tree.city, cities);
     assert.hasAllKeys(tree["data-center"], dataCenters);
   });
 
   it("returns each location under its key and value", function() {
-    const us = { localityKey: "country", localityValue: "US" };
-    const nyc = { localityKey: "city", localityValue: "NYC" };
-    const sf = { localityKey: "city", localityValue: "SF" };
+    const us = { locality_key: "country", locality_value: "US", latitude: 1, longitude: 2 };
+    const nyc = { locality_key: "city", locality_value: "NYC", latitude: 3, longitude: 4 };
+    const sf = { locality_key: "city", locality_value: "SF", latitude: 5, longitude: 6 };
     const locations = [us, nyc, sf];
     const state = makeStateWithLocations(locations);
 
     const tree = selectLocationTree(state);
 
-    assert.equal(tree.country.US, us);
-    assert.equal(tree.city.NYC, nyc);
-    assert.equal(tree.city.SF, sf);
+    assert.deepEqual(tree.country.US, us);
+    assert.deepEqual(tree.city.NYC, nyc);
+    assert.deepEqual(tree.city.SF, sf);
   });
 });

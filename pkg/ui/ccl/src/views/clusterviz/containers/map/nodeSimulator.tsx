@@ -14,6 +14,7 @@ import * as protos from "src/js/protos";
 
 import { NanoToMilli } from "src/util/convert";
 import { refreshNodes, refreshLiveness, refreshLocations } from "src/redux/apiReducers";
+import { Location } from "src/redux/locations";
 import { nodesSummarySelector, NodesSummary } from "src/redux/nodes";
 import { AdminUIState } from "src/redux/state";
 
@@ -96,7 +97,7 @@ export class SimulatedNodeStatus {
     return this.statusHistory[0];
   }
 
-  setLocation(loc: any) {
+  setLocation(loc: Location) {
     this.location = [loc.longitude, loc.latitude];
   }
 
@@ -125,8 +126,10 @@ export class SimulatedNodeStatus {
 interface NodeSimulatorProps {
   nodesSummary: NodesSummary;
   statusesValid: boolean;
+  locations: Location[];
   refreshNodes: typeof refreshNodes;
   refreshLiveness: typeof refreshLiveness;
+  refreshLocations: typeof refreshLocations;
 }
 
 interface NodeSimulatorOwnProps {
@@ -151,7 +154,7 @@ class NodeSimulator extends React.Component<NodeSimulatorProps & NodeSimulatorOw
   // accumulateHistory parses incoming nodeStatus properties and accumulates
   // a history for each node.
   accumulateHistory(props = this.props) {
-    if (!props.nodesSummary.nodeStatuses || !props.locations) {
+    if (!props.nodesSummary.nodeStatuses || !_.isEmpty(props.locations)) {
       return;
     }
 
