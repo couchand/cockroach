@@ -3,6 +3,11 @@ import { assert } from "chai";
 import * as protos from "src/js/protos";
 import { Location, selectLocations, selectLocationTree } from "./locations";
 
+function climbOutOfTheMorass(loc: Location) {
+  // TODO(couchand): the generated protobuf types are simply horrible
+  return protos.cockroach.server.serverpb.LocationsResponse.Location.fromObject(loc).toObject();
+}
+
 function makeStateWithLocations(locationData: Location[]) {
   return {
     cachedData: {
@@ -58,9 +63,9 @@ describe("selectLocations", function() {
     }];
     const state = makeStateWithLocations(locationData);
 
-    //assert(false, JSON.stringify({ real: selectLocations(state), expected: locationData }));
+    const result = selectLocations(state).map(climbOutOfTheMorass);
 
-    assert.deepEqual(selectLocations(state), locationData);
+    assert.deepEqual(result, locationData);
   });
 });
 
@@ -114,8 +119,8 @@ describe("selectLocationTree", function() {
 
     const tree = selectLocationTree(state);
 
-    assert.deepEqual(tree.country.US, us);
-    assert.deepEqual(tree.city.NYC, nyc);
-    assert.deepEqual(tree.city.SF, sf);
+    assert.deepEqual(climbOutOfTheMorass(tree.country.US), us);
+    assert.deepEqual(climbOutOfTheMorass(tree.city.NYC), nyc);
+    assert.deepEqual(climbOutOfTheMorass(tree.city.SF), sf);
   });
 });
