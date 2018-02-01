@@ -12,15 +12,16 @@ import PropTypes from "prop-types";
 import React from "react";
 import { InjectedRouter, RouterState } from "react-router";
 
-import { LocalityTier, LocalityTree } from "src/redux/localities";
+import { LocalityTier, LocalityTree, getLeaves } from "src/redux/localities";
 import { LocationTree } from "src/redux/locations";
 import { generateLocalityRoute } from "src/util/localities";
 import { findOrCalculateLocation } from "src/util/locations";
-import { NodeStatus$Properties } from "src/util/proto";
+import { MetricConstants, NodeStatus$Properties } from "src/util/proto";
 
 import { SimulatedNodeStatus } from "./nodeSimulator";
 import { NodeView } from "./nodeView";
 import { Box, ZoomTransformer } from "./zoom";
+import {StatsView} from "oss/ccl/src/views/clusterviz/containers/map/statsView";
 
 interface LocalityViewProps {
   locality: LocalityTree;
@@ -41,12 +42,22 @@ class LocalityView extends React.Component<LocalityViewProps, any> {
     const { tiers } = this.props.locality;
     const thisTier = tiers[tiers.length - 1];
 
+    const leavesUnderMe = getLeaves(this.props.locality);
+    const totalCapacity = _.sum(leavesUnderMe.map((nodeStatus) =>
+      nodeStatus.metrics[MetricConstants.capacity],
+    ));
+    const totalUsedCapacity = _.sum(leavesUnderMe.map((nodeStatus) =>
+      nodeStatus.metrics[MetricConstants.usedCapacity],
+    ));
+
     return (
-      <text x={15} y={15} onClick={this.onClick} style={{ cursor: "pointer" }}>
-        {
-          thisTier.key + "=" + thisTier.value
-        }
-      </text>
+      <g onClick={this.onClick} style={{ cursor: "pointer" }}>
+        <StatsView
+          capacity={totalCapacity}
+          usedCapacity={totalUsedCapacity}
+          label={`${thisTier.key}=${thisTier.value}`}
+        />
+      </g>
     );
   }
 }
