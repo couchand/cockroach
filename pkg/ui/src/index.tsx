@@ -52,6 +52,7 @@ import Range from "src/views/reports/containers/range";
 import CommandQueue from "src/views/reports/containers/commandQueue";
 import Debug from "src/views/reports/containers/debug";
 import ReduxDebug from "src/views/reports/containers/redux";
+import RangeCount from "src/views/reports/containers/metrics/rangeCount";
 import NotFound from "src/views/app/components/NotFound";
 
 import { alertDataSync } from "src/redux/alerts";
@@ -145,6 +146,10 @@ ReactDOM.render(
           <Route path={`certificates/:${nodeIDAttr}`} component={ Certificates } />
           <Route path={`range/:${rangeIDAttr}`} component={ Range } />
           <Route path={`range/:${rangeIDAttr}/cmdqueue`} component={ CommandQueue } />
+          <Route path="metrics">
+            <IndexRedirect to="/debug" />
+            <Route path="range-count" component={ RangeCount } />
+          </Route>
         </Route>
 
         { /* old route redirects */ }
