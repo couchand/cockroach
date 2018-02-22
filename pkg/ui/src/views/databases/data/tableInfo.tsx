@@ -9,6 +9,7 @@ type TableStatsResponse = protos.cockroach.server.serverpb.TableStatsResponse;
 // TableInfo is a supporting data structure which combines data about a single
 // table that was obtained from multiple backend sources.
 export class TableInfo {
+  public db: string;
   public name: string;
   public id: number;
   public numColumns: number;
@@ -18,7 +19,8 @@ export class TableInfo {
   public rangeCount: number;
   public createStatement: string;
   public grants: protos.cockroach.server.serverpb.TableDetailsResponse.Grant$Properties[];
-  constructor(name: string, details: TableDetailsResponse, stats: TableStatsResponse) {
+  constructor(db: string, name: string, details: TableDetailsResponse, stats: TableStatsResponse) {
+      this.db = db;
       this.name = name;
       this.id = details && details.descriptor_id.toNumber();
       this.numColumns = details && details.columns.length;

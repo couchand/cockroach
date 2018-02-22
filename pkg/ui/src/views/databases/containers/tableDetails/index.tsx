@@ -144,7 +144,7 @@ function tableInfo(state: AdminUIState, props: RouterState): TableInfo {
   const table = props.params[tableNameAttr];
   const details = state.cachedData.tableDetails[generateTableID(db, table)];
   const stats = state.cachedData.tableStats[generateTableID(db, table)];
-  return new TableInfo(table, details && details.data, stats && stats.data);
+  return new TableInfo(db, table, details && details.data, stats && stats.data);
 }
 
 // Connect the TableMain class with our redux store.

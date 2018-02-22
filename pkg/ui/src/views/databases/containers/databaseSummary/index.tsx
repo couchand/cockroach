@@ -101,7 +101,7 @@ export function tableInfos(state: AdminUIState, dbName: string) {
     const tblId = generateTableID(dbName, tableName);
     const tblDetails = details[tblId] && details[tblId].data;
     const tblStats = stats[tblId] && stats[tblId].data;
-    return new TableInfo(tableName, tblDetails, tblStats);
+    return new TableInfo(dbName, tableName, tblDetails, tblStats);
   });
 }
 
