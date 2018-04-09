@@ -6,6 +6,7 @@ import { InjectedRouter, RouterState } from "react-router";
 
 import Dropdown, { DropdownOption } from "src/views/shared/components/dropdown";
 import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconfig";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
 import { AdminUIState } from "src/redux/state";
 import { refreshDatabases } from "src/redux/apiReducers";
@@ -68,8 +69,8 @@ interface DatabaseListActions {
 type DatabaseListProps = DatabaseListData & DatabaseListActions;
 
 // DatabaseTablesList displays the "Tables" sub-tab of the main database page.
-class DatabaseTablesList extends React.Component<DatabaseListProps, {}> {
-  static title() {
+class DatabaseTablesList extends TitledComponent<DatabaseListProps, {}> {
+  title() {
     return "Databases";
   }
 
@@ -94,8 +95,8 @@ class DatabaseTablesList extends React.Component<DatabaseListProps, {}> {
 }
 
 // DatabaseTablesList displays the "Grants" sub-tab of the main database page.
-class DatabaseGrantsList extends React.Component<DatabaseListProps, {}> {
-  static title() {
+class DatabaseGrantsList extends TitledComponent<DatabaseListProps, {}> {
+  title() {
     return "Databases";
   }
 

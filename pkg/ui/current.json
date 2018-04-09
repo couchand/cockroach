@@ -1,0 +1,112 @@
+{
+  "sha": "d1258a71c7ccb752ccbc1a7c594772437713c563",
+  "commit": {
+    "author": {
+      "name": "Alfonso Subiotto Marqués",
+      "email": "alfonso@cockroachlabs.com",
+      "date": "2018-03-08T15:30:22Z"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "date": "2018-03-08T15:30:22Z"
+    },
+    "message": "Merge pull request #23463 from asubiotto/haproxy-cfg\n\ncli: update generated haproxy config with readiness endpoint",
+    "tree": {
+      "sha": "05f7d3c6f3dbc86dabc70f352900455a1bfe640e",
+      "url": "https://api.github.com/repos/cockroachdb/cockroach/git/trees/05f7d3c6f3dbc86dabc70f352900455a1bfe640e"
+    },
+    "url": "https://api.github.com/repos/cockroachdb/cockroach/git/commits/d1258a71c7ccb752ccbc1a7c594772437713c563",
+    "comment_count": 0,
+    "verification": {
+      "verified": true,
+      "reason": "valid",
+      "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJaoVcOCRBK7hj4Ov3rIwAAdHIIAKMToXFFRR1RzsEiH7xuSMEp\nIBlzR4MqVJkYuIv7qLHcsJhHCO694RLtoZd03Cq1fi5ERIwbWSlBO+8aioH0VfYQ\nLGLGCaIgONtOwzosJ7Li27vI71bVYqB7T0j9kjRAfVEZ5XkoeT9B7Pdm2+CTw++j\nkp5s0yQ7IgmENAVBCtVyRRHiXiYn1RJM4Ut1qJyzPnjPvtBO/mb492gzs0MEheiL\nxeBB6OWLApqmm6k06LIB4lyRoZscVUy+xOViHpReevHXzZNup85wpdpy3xwtjBEw\n3D4EKCF1Dhne8h9/o7fSlizBv6mnqBBG4vScApgVIIKFLWgaw/+ks/qciAB23NM=\n=DdlW\n-----END PGP SIGNATURE-----\n",
+      "payload": "tree 05f7d3c6f3dbc86dabc70f352900455a1bfe640e\nparent c0f460ae98f6f5134e24cffd95c3b33ac3e163cc\nparent ff10482c6546d9322f8e185aaf2a57b98453c06b\nauthor Alfonso Subiotto Marqués <alfonso@cockroachlabs.com> 1520523022 -0500\ncommitter GitHub <noreply@github.com> 1520523022 -0500\n\nMerge pull request #23463 from asubiotto/haproxy-cfg\n\ncli: update generated haproxy config with readiness endpoint"
+    }
+  },
+  "url": "https://api.github.com/repos/cockroachdb/cockroach/commits/d1258a71c7ccb752ccbc1a7c594772437713c563",
+  "html_url": "https://github.com/cockroachdb/cockroach/commit/d1258a71c7ccb752ccbc1a7c594772437713c563",
+  "comments_url": "https://api.github.com/repos/cockroachdb/cockroach/commits/d1258a71c7ccb752ccbc1a7c594772437713c563/comments",
+  "author": {
+    "login": "asubiotto",
+    "id": 10560359,
+    "avatar_url": "https://avatars2.githubusercontent.com/u/10560359?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/asubiotto",
+    "html_url": "https://github.com/asubiotto",
+    "followers_url": "https://api.github.com/users/asubiotto/followers",
+    "following_url": "https://api.github.com/users/asubiotto/following{/other_user}",
+    "gists_url": "https://api.github.com/users/asubiotto/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/asubiotto/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/asubiotto/subscriptions",
+    "organizations_url": "https://api.github.com/users/asubiotto/orgs",
+    "repos_url": "https://api.github.com/users/asubiotto/repos",
+    "events_url": "https://api.github.com/users/asubiotto/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/asubiotto/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "committer": {
+    "login": "web-flow",
+    "id": 19864447,
+    "avatar_url": "https://avatars3.githubusercontent.com/u/19864447?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/web-flow",
+    "html_url": "https://github.com/web-flow",
+    "followers_url": "https://api.github.com/users/web-flow/followers",
+    "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+    "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+    "organizations_url": "https://api.github.com/users/web-flow/orgs",
+    "repos_url": "https://api.github.com/users/web-flow/repos",
+    "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/web-flow/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "c0f460ae98f6f5134e24cffd95c3b33ac3e163cc",
+      "url": "https://api.github.com/repos/cockroachdb/cockroach/commits/c0f460ae98f6f5134e24cffd95c3b33ac3e163cc",
+      "html_url": "https://github.com/cockroachdb/cockroach/commit/c0f460ae98f6f5134e24cffd95c3b33ac3e163cc"
+    },
+    {
+      "sha": "ff10482c6546d9322f8e185aaf2a57b98453c06b",
+      "url": "https://api.github.com/repos/cockroachdb/cockroach/commits/ff10482c6546d9322f8e185aaf2a57b98453c06b",
+      "html_url": "https://github.com/cockroachdb/cockroach/commit/ff10482c6546d9322f8e185aaf2a57b98453c06b"
+    }
+  ],
+  "stats": {
+    "total": 156,
+    "additions": 154,
+    "deletions": 2
+  },
+  "files": [
+    {
+      "sha": "bafd02af6ce5ecc0bd33a9460e514dad6ac7bec9",
+      "filename": "pkg/cli/haproxy.go",
+      "status": "modified",
+      "additions": 46,
+      "deletions": 2,
+      "changes": 48,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/d1258a71c7ccb752ccbc1a7c594772437713c563/pkg/cli/haproxy.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/d1258a71c7ccb752ccbc1a7c594772437713c563/pkg/cli/haproxy.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/cli/haproxy.go?ref=d1258a71c7ccb752ccbc1a7c594772437713c563",
+      "patch": "@@ -16,11 +16,19 @@ package cli\n \n import (\n \t\"context\"\n+\t\"flag\"\n \t\"html/template\"\n \t\"io\"\n \t\"os\"\n+\t\"strings\"\n \n+\t\"io/ioutil\"\n+\n+\t\"github.com/cockroachdb/cockroach/pkg/base\"\n+\t\"github.com/cockroachdb/cockroach/pkg/cli/cliflags\"\n+\t\"github.com/cockroachdb/cockroach/pkg/roachpb\"\n \t\"github.com/cockroachdb/cockroach/pkg/server/serverpb\"\n+\t\"github.com/cockroachdb/cockroach/pkg/server/status\"\n \t\"github.com/spf13/cobra\"\n )\n \n@@ -40,6 +48,41 @@ running haproxy in the same network.\n \tRunE: MaybeDecorateGRPCError(runGenHAProxyCmd),\n }\n \n+type haProxyNodeInfo struct {\n+\tNodeID   roachpb.NodeID\n+\tNodeAddr string\n+\t// The port on which health checks are performed.\n+\tCheckPort string\n+}\n+\n+func nodeStatusesToNodeInfos(statuses []status.NodeStatus) []haProxyNodeInfo {\n+\tfs := flag.NewFlagSet(\"haproxy\", flag.ContinueOnError)\n+\tcheckPort := fs.String(cliflags.ServerHTTPPort.Name, base.DefaultHTTPPort, \"\" /* usage */)\n+\n+\t// Discard parsing output.\n+\tfs.SetOutput(ioutil.Discard)\n+\n+\tnodeInfos := make([]haProxyNodeInfo, len(statuses))\n+\tfor i, status := range statuses {\n+\t\tnodeInfos[i].NodeID = status.Desc.NodeID\n+\t\tnodeInfos[i].NodeAddr = status.Desc.Address.AddressField\n+\n+\t\t*checkPort = base.DefaultHTTPPort\n+\t\t// Iterate over the arguments until the ServerHTTPPort flag is found and\n+\t\t// parse the remainder of the arguments. This is done because Parse returns\n+\t\t// when it encounters an undefined flag and we do not want to define all\n+\t\t// possible flags.\n+\t\tfor i, arg := range status.Args {\n+\t\t\tif strings.Contains(arg, cliflags.ServerHTTPPort.Name) {\n+\t\t\t\t_ = fs.Parse(status.Args[i:])\n+\t\t\t}\n+\t\t}\n+\n+\t\tnodeInfos[i].CheckPort = *checkPort\n+\t}\n+\treturn nodeInfos\n+}\n+\n func runGenHAProxyCmd(cmd *cobra.Command, args []string) error {\n \tif len(args) > 0 {\n \t\treturn usageAndError(cmd)\n@@ -75,7 +118,7 @@ func runGenHAProxyCmd(cmd *cobra.Command, args []string) error {\n \t\tw = f\n \t}\n \n-\terr = configTemplate.Execute(w, nodeStatuses.Nodes)\n+\terr = configTemplate.Execute(w, nodeStatusesToNodeInfos(nodeStatuses.Nodes))\n \tif err != nil {\n \t\t// Return earliest error, but still close the file.\n \t\t_ = f.Close()\n@@ -107,6 +150,7 @@ listen psql\n     bind :26257\n     mode tcp\n     balance roundrobin\n-{{range .}}    server cockroach{{.Desc.NodeID}} {{.Desc.Address.AddressField}} check\n+    option httpchk GET /health?ready=1\n+{{range .}}    server cockroach{{.NodeID}} {{.NodeAddr}} check port {{.CheckPort}}\n {{end}}\n `"
+    },
+    {
+      "sha": "b6f2a45ea4526e00001d36714dba3c8785ea21a6",
+      "filename": "pkg/cli/haproxy_test.go",
+      "status": "added",
+      "additions": 108,
+      "deletions": 0,
+      "changes": 108,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/d1258a71c7ccb752ccbc1a7c594772437713c563/pkg/cli/haproxy_test.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/d1258a71c7ccb752ccbc1a7c594772437713c563/pkg/cli/haproxy_test.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/cli/haproxy_test.go?ref=d1258a71c7ccb752ccbc1a7c594772437713c563",
+      "patch": "@@ -0,0 +1,108 @@\n+// Copyright 2017 The Cockroach Authors.\n+//\n+// Licensed under the Apache License, Version 2.0 (the \"License\");\n+// you may not use this file except in compliance with the License.\n+// You may obtain a copy of the License at\n+//\n+//     http://www.apache.org/licenses/LICENSE-2.0\n+//\n+// Unless required by applicable law or agreed to in writing, software\n+// distributed under the License is distributed on an \"AS IS\" BASIS,\n+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n+// implied. See the License for the specific language governing\n+// permissions and limitations under the License.\n+\n+package cli\n+\n+import (\n+\t\"reflect\"\n+\t\"testing\"\n+\n+\t\"github.com/cockroachdb/cockroach/pkg/base\"\n+\t\"github.com/cockroachdb/cockroach/pkg/roachpb\"\n+\t\"github.com/cockroachdb/cockroach/pkg/server/status\"\n+\t\"github.com/cockroachdb/cockroach/pkg/util\"\n+\t\"github.com/cockroachdb/cockroach/pkg/util/leaktest\"\n+)\n+\n+func TestNodeStatusToNodeInfoConversion(t *testing.T) {\n+\tdefer leaktest.AfterTest(t)()\n+\n+\ttestCases := []struct {\n+\t\tinput    []status.NodeStatus\n+\t\texpected []haProxyNodeInfo\n+\t}{\n+\t\t{\n+\t\t\t[]status.NodeStatus{\n+\t\t\t\t{\n+\t\t\t\t\tDesc: roachpb.NodeDescriptor{\n+\t\t\t\t\t\tNodeID: 1,\n+\t\t\t\t\t\tAddress: util.UnresolvedAddr{\n+\t\t\t\t\t\t\tAddressField: \"addr\",\n+\t\t\t\t\t\t},\n+\t\t\t\t\t},\n+\t\t\t\t\t// Flags but no http port.\n+\t\t\t\t\tArgs: []string{\"--unwanted\", \"-unwanted\"},\n+\t\t\t\t},\n+\t\t\t},\n+\t\t\t[]haProxyNodeInfo{\n+\t\t\t\t{\n+\t\t\t\t\tNodeID:    1,\n+\t\t\t\t\tNodeAddr:  \"addr\",\n+\t\t\t\t\tCheckPort: base.DefaultHTTPPort,\n+\t\t\t\t},\n+\t\t\t},\n+\t\t},\n+\t\t{\n+\t\t\t[]status.NodeStatus{\n+\t\t\t\t{\n+\t\t\t\t\tArgs: []string{\"--unwanted\", \"-http-port=1234\"},\n+\t\t\t\t},\n+\t\t\t\t{\n+\t\t\t\t\tArgs: nil,\n+\t\t\t\t},\n+\t\t\t},\n+\t\t\t[]haProxyNodeInfo{\n+\t\t\t\t{\n+\t\t\t\t\tCheckPort: \"1234\",\n+\t\t\t\t},\n+\t\t\t\t{\n+\t\t\t\t\tCheckPort: base.DefaultHTTPPort,\n+\t\t\t\t},\n+\t\t\t},\n+\t\t},\n+\t\t{\n+\t\t\t[]status.NodeStatus{\n+\t\t\t\t{\n+\t\t\t\t\tArgs: []string{\"--http-port\", \"5678\", \"--unwanted\"},\n+\t\t\t\t},\n+\t\t\t},\n+\t\t\t[]haProxyNodeInfo{\n+\t\t\t\t{\n+\t\t\t\t\tCheckPort: \"5678\",\n+\t\t\t\t},\n+\t\t\t},\n+\t\t},\n+\t\t{\n+\t\t\t[]status.NodeStatus{\n+\t\t\t\t{\n+\t\t\t\t\t// We shouldn't see this, because the flag needs an argument on startup,\n+\t\t\t\t\t// but check that we fall back to the default port.\n+\t\t\t\t\tArgs: []string{\"-http-port\"},\n+\t\t\t\t},\n+\t\t\t},\n+\t\t\t[]haProxyNodeInfo{\n+\t\t\t\t{\n+\t\t\t\t\tCheckPort: base.DefaultHTTPPort,\n+\t\t\t\t},\n+\t\t\t},\n+\t\t},\n+\t}\n+\n+\tfor _, testCase := range testCases {\n+\t\toutput := nodeStatusesToNodeInfos(testCase.input)\n+\t\tif !reflect.DeepEqual(output, testCase.expected) {\n+\t\t\tt.Fatalf(\"unexpected output %v, expected %v\", output, testCase.expected)\n+\t\t}\n+\t}\n+}"
+    }
+  ]
+}

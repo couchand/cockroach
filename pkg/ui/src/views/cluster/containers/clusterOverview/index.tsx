@@ -12,6 +12,7 @@ import createChartComponent from "src/views/shared/util/d3-react";
 import capacityChart from "./capacity";
 import spinner from "assets/spinner.gif";
 import { refreshNodes, refreshLiveness } from "src/redux/apiReducers";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 import "./cluster.styl";
 
 // tslint:disable-next-line:variable-name
@@ -197,8 +198,8 @@ const ClusterSummaryConnected = connect(mapStateToClusterSummaryProps, actions)(
 /**
  * Renders the main content of the cluster visualization page.
  */
-class ClusterOverview extends React.Component<RouterState, {}> {
-  static title() {
+class ClusterOverview extends TitledComponent<RouterState, {}> {
+  title() {
     return "Cluster Overview";
   }
 

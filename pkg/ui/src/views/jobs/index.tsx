@@ -16,6 +16,7 @@ import Loading from "src/views/shared/components/loading";
 import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconfig";
 import { SortSetting } from "src/views/shared/components/sortabletable";
 import { ColumnDescriptor, SortedTable } from "src/views/shared/components/sortedtable";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 import { ToolTipWrapper } from "src/views/shared/components/toolTip";
 
 import spinner from "assets/spinner.gif";
@@ -175,11 +176,15 @@ const titleTooltip = (
   </span>
 );
 
-class JobsTable extends React.Component<JobsTableProps, {}> {
-  static title() {
+class JobsTable extends TitledComponent<JobsTableProps, {}> {
+  title() {
+    return "Jobs";
+  }
+
+  header() {
     return (
       <div>
-        Jobs
+        <h1>{ this.title() }</h1>
         <div className="section-heading__tooltip">
           <ToolTipWrapper text={titleTooltip}>
             <div className="section-heading__tooltip-hover-area">

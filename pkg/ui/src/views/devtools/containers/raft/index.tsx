@@ -1,12 +1,14 @@
 import React from "react";
 import { Link } from "react-router";
 
+import { TitledComponent } from "src/views/shared/components/titledComponent";
+
 /**
  * Renders the layout of the nodes page.
  */
-export default class Layout extends React.Component<{}, {}> {
-  static title() {
-    return <h2>Raft</h2>;
+export default class Layout extends TitledComponent<{}, {}> {
+  title() {
+    return "Raft";
   }
 
   render() {

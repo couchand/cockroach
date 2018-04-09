@@ -4,6 +4,7 @@ import classNames from "classnames";
 import CopyToClipboard from "react-copy-to-clipboard";
 
 import { AdminUIState } from "src/redux/state";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
 import "./redux.styl";
 
@@ -15,8 +16,8 @@ interface ReduxDebugState {
   copied: boolean;
 }
 
-class ReduxDebug extends React.Component<ReduxDebugProps, ReduxDebugState> {
-  static title() {
+class ReduxDebug extends TitledComponent<ReduxDebugProps, ReduxDebugState> {
+  title() {
     return "Redux State";
   }
 

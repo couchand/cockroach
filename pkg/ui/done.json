@@ -1,0 +1,131 @@
+{
+  "sha": "64946113ac8eaf52610c80dfa7a704e8a710c005",
+  "commit": {
+    "author": {
+      "name": "Daniel Harrison",
+      "email": "daniel.harrison@gmail.com",
+      "date": "2018-03-07T20:57:23Z"
+    },
+    "committer": {
+      "name": "Daniel Harrison",
+      "email": "daniel.harrison@gmail.com",
+      "date": "2018-03-08T14:57:39Z"
+    },
+    "message": "workload: reduce allocations in WriteCSVRows\n\nAlso stop using fmt.Sprintf for everything.\n\n    name            old time/op    new time/op     delta\n    WriteCSVRows-8    19.1µs ± 4%      9.9µs ± 1%  -48.00%  (p=0.008 n=5+5)\n\n    name            old speed      new speed       delta\n    WriteCSVRows-8  63.9MB/s ± 8%  119.2MB/s ± 2%  +86.56%  (p=0.008 n=5+5)\n\n    name            old alloc/op   new alloc/op    delta\n    WriteCSVRows-8    7.08kB ± 1%     5.30kB ± 0%  -25.21%  (p=0.008 n=5+5)\n\n    name            old allocs/op  new allocs/op   delta\n    WriteCSVRows-8       104 ± 0%         33 ± 0%  -68.27%  (p=0.008 n=5+5)\n\nRelease note: None",
+    "tree": {
+      "sha": "fcd62a48510be385a0af097e15ac72feda4a3b3c",
+      "url": "https://api.github.com/repos/cockroachdb/cockroach/git/trees/fcd62a48510be385a0af097e15ac72feda4a3b3c"
+    },
+    "url": "https://api.github.com/repos/cockroachdb/cockroach/git/commits/64946113ac8eaf52610c80dfa7a704e8a710c005",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/cockroachdb/cockroach/commits/64946113ac8eaf52610c80dfa7a704e8a710c005",
+  "html_url": "https://github.com/cockroachdb/cockroach/commit/64946113ac8eaf52610c80dfa7a704e8a710c005",
+  "comments_url": "https://api.github.com/repos/cockroachdb/cockroach/commits/64946113ac8eaf52610c80dfa7a704e8a710c005/comments",
+  "author": {
+    "login": "danhhz",
+    "id": 52528,
+    "avatar_url": "https://avatars1.githubusercontent.com/u/52528?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/danhhz",
+    "html_url": "https://github.com/danhhz",
+    "followers_url": "https://api.github.com/users/danhhz/followers",
+    "following_url": "https://api.github.com/users/danhhz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/danhhz/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/danhhz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/danhhz/subscriptions",
+    "organizations_url": "https://api.github.com/users/danhhz/orgs",
+    "repos_url": "https://api.github.com/users/danhhz/repos",
+    "events_url": "https://api.github.com/users/danhhz/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/danhhz/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "committer": {
+    "login": "danhhz",
+    "id": 52528,
+    "avatar_url": "https://avatars1.githubusercontent.com/u/52528?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/danhhz",
+    "html_url": "https://github.com/danhhz",
+    "followers_url": "https://api.github.com/users/danhhz/followers",
+    "following_url": "https://api.github.com/users/danhhz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/danhhz/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/danhhz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/danhhz/subscriptions",
+    "organizations_url": "https://api.github.com/users/danhhz/orgs",
+    "repos_url": "https://api.github.com/users/danhhz/repos",
+    "events_url": "https://api.github.com/users/danhhz/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/danhhz/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "parents": [
+    {
+      "sha": "08f9a243dc666eaa5818fc56f7b4b9c65281c537",
+      "url": "https://api.github.com/repos/cockroachdb/cockroach/commits/08f9a243dc666eaa5818fc56f7b4b9c65281c537",
+      "html_url": "https://github.com/cockroachdb/cockroach/commit/08f9a243dc666eaa5818fc56f7b4b9c65281c537"
+    }
+  ],
+  "stats": {
+    "total": 69,
+    "additions": 45,
+    "deletions": 24
+  },
+  "files": [
+    {
+      "sha": "a22ff5fa5b3355c3c1c632ece491a2892b8a1f52",
+      "filename": "pkg/workload/csv.go",
+      "status": "modified",
+      "additions": 23,
+      "deletions": 6,
+      "changes": 29,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/csv.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/csv.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/workload/csv.go?ref=64946113ac8eaf52610c80dfa7a704e8a710c005",
+      "patch": "@@ -40,6 +40,7 @@ func WriteCSVRows(\n ) (rowIdx int, err error) {\n \tbytesWrittenW := &bytesWrittenWriter{w: w}\n \tcsvW := csv.NewWriter(bytesWrittenW)\n+\tvar rowStrings []string\n \tfor rowIdx = rowStart; rowIdx < rowEnd; rowIdx++ {\n \t\tif sizeBytesLimit > 0 && bytesWrittenW.written > sizeBytesLimit {\n \t\t\tbreak\n@@ -51,13 +52,13 @@ func WriteCSVRows(\n \t\tdefault:\n \t\t}\n \t\trow := table.InitialRowFn(rowIdx)\n-\t\trowStrings := make([]string, len(row))\n+\t\tif cap(rowStrings) < len(row) {\n+\t\t\trowStrings = make([]string, len(row))\n+\t\t} else {\n+\t\t\trowStrings = rowStrings[:len(row)]\n+\t\t}\n \t\tfor i, datum := range row {\n-\t\t\tif datum == nil {\n-\t\t\t\trowStrings[i] = `NULL`\n-\t\t\t} else {\n-\t\t\t\trowStrings[i] = fmt.Sprintf(`%v`, datum)\n-\t\t\t}\n+\t\t\trowStrings[i] = datumToCSVString(datum)\n \t\t}\n \t\tif err := csvW.Write(rowStrings); err != nil {\n \t\t\treturn 0, err\n@@ -67,6 +68,22 @@ func WriteCSVRows(\n \treturn rowIdx, csvW.Error()\n }\n \n+func datumToCSVString(datum interface{}) string {\n+\tif datum == nil {\n+\t\treturn `NULL`\n+\t}\n+\tswitch t := datum.(type) {\n+\tcase int:\n+\t\treturn strconv.Itoa(t)\n+\tcase float64:\n+\t\treturn strconv.FormatFloat(t, 'f', -1, 64)\n+\tcase string:\n+\t\treturn t\n+\tdefault:\n+\t\tpanic(fmt.Sprintf(\"unsupported type %T: %v\", datum, datum))\n+\t}\n+}\n+\n // HandleCSV configures a Generator with url params and outputs the data for a\n // single Table as a CSV (optionally limiting the rows via `row-start` and\n // `row-end` params). It is intended for use in implementing a"
+    },
+    {
+      "sha": "ac02e7ee3c39d2e866c41e5ee381d0698f653cfb",
+      "filename": "pkg/workload/csv_test.go",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 9,
+      "changes": 21,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/csv_test.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/csv_test.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/workload/csv_test.go?ref=64946113ac8eaf52610c80dfa7a704e8a710c005",
+      "patch": "@@ -26,7 +26,7 @@ import (\n \t\"github.com/cockroachdb/cockroach/pkg/util/leaktest\"\n \t\"github.com/cockroachdb/cockroach/pkg/workload\"\n \t\"github.com/cockroachdb/cockroach/pkg/workload/bank\"\n-\t_ \"github.com/cockroachdb/cockroach/pkg/workload/tpcc\"\n+\t\"github.com/cockroachdb/cockroach/pkg/workload/tpcc\"\n )\n \n func TestHandleCSV(t *testing.T) {\n@@ -75,17 +75,20 @@ func TestHandleCSV(t *testing.T) {\n \n func BenchmarkWriteCSVRows(b *testing.B) {\n \tctx := context.Background()\n-\tgen := bank.FromRows(1000)\n-\tconst limit = -1\n+\n+\tvar rows [][]interface{}\n+\tfor _, table := range tpcc.FromWarehouses(1).Tables() {\n+\t\trows = append(rows, table.InitialRowFn(0))\n+\t}\n+\ttable := workload.Table{\n+\t\tInitialRowFn: func(rowIdx int) []interface{} { return rows[rowIdx] },\n+\t}\n \n \tvar buf bytes.Buffer\n \tfn := func() {\n-\t\tfor _, table := range gen.Tables() {\n-\t\t\tif _, err := workload.WriteCSVRows(\n-\t\t\t\tctx, &buf, table, 0, table.InitialRowCount, limit,\n-\t\t\t); err != nil {\n-\t\t\t\tb.Fatalf(`%+v`, err)\n-\t\t\t}\n+\t\tconst limit = -1\n+\t\tif _, err := workload.WriteCSVRows(ctx, &buf, table, 0, len(rows), limit); err != nil {\n+\t\t\tb.Fatalf(`%+v`, err)\n \t\t}\n \t}\n "
+    },
+    {
+      "sha": "2e9914321662a830cba238d5d2d9fcd3f8fa74b0",
+      "filename": "pkg/workload/tpcc/tpcc.go",
+      "status": "modified",
+      "additions": 8,
+      "deletions": 0,
+      "changes": 8,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/tpcc/tpcc.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/tpcc/tpcc.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/workload/tpcc/tpcc.go?ref=64946113ac8eaf52610c80dfa7a704e8a710c005",
+      "patch": "@@ -54,6 +54,14 @@ func init() {\n \tworkload.Register(tpccMeta)\n }\n \n+// FromWarehouses returns a tpcc generator pre-configured with the specified\n+// number of warehouses.\n+func FromWarehouses(warehouses int) workload.Generator {\n+\tgen := tpccMeta.New().(*tpcc)\n+\tgen.warehouses = warehouses\n+\treturn gen\n+}\n+\n var tpccMeta = workload.Meta{\n \tName: `tpcc`,\n \tDescription: `TPC-C simulates a transaction processing workload` +"
+    },
+    {
+      "sha": "add524af5ab28627e7fdb0133f0b1e5440a965a4",
+      "filename": "pkg/workload/tpcc/tpcc_test.go",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 9,
+      "changes": 11,
+      "blob_url": "https://github.com/cockroachdb/cockroach/blob/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/tpcc/tpcc_test.go",
+      "raw_url": "https://github.com/cockroachdb/cockroach/raw/64946113ac8eaf52610c80dfa7a704e8a710c005/pkg/workload/tpcc/tpcc_test.go",
+      "contents_url": "https://api.github.com/repos/cockroachdb/cockroach/contents/pkg/workload/tpcc/tpcc_test.go?ref=64946113ac8eaf52610c80dfa7a704e8a710c005",
+      "patch": "@@ -19,19 +19,12 @@ import (\n \t\"testing\"\n \n \t\"github.com/cockroachdb/cockroach/pkg/workload\"\n+\t\"github.com/cockroachdb/cockroach/pkg/workload/tpcc\"\n )\n \n func BenchmarkInitTPCC(b *testing.B) {\n \tb.Run(`warehouses=1`, func(b *testing.B) {\n-\t\tgenMeta, err := workload.Get(`tpcc`)\n-\t\tif err != nil {\n-\t\t\tb.Fatal(err)\n-\t\t}\n-\t\tgen := genMeta.New()\n-\t\tflags := []string{`--warehouses=1`}\n-\t\tif err := gen.(workload.Flagser).Flags().Parse(flags); err != nil {\n-\t\t\tb.Fatal(err)\n-\t\t}\n+\t\tgen := tpcc.FromWarehouses(1)\n \t\tvar bytes int64\n \t\tb.ResetTimer()\n \t\tfor i := 0; i < b.N; i++ {"
+    }
+  ]
+}

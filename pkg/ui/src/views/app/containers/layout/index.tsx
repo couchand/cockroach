@@ -1,15 +1,16 @@
 import React from "react";
 import _ from "lodash";
+import DocumentTitle from "react-document-title";
 import { RouterState } from "react-router";
 import { StickyContainer } from "react-sticky";
 
-import { TitledComponent } from "src/interfaces/layout";
 import NavigationBar from "src/views/app/components/layoutSidebar";
 import TimeWindowManager from "src/views/app/containers/timewindow";
 import AlertBanner from "src/views/app/containers/alertBanner";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
-function isTitledComponent(obj: Object | TitledComponent): obj is TitledComponent {
-  return obj && _.isFunction((obj as TitledComponent).title);
+function isTitledComponent<P, S>(obj: Object | TitledComponent<P, S>): obj is TitledComponent<P, S> {
+  return obj && _.isFunction((obj as TitledComponent<P, S>).title);
 }
 
 /**
@@ -20,35 +21,37 @@ function isTitledComponent(obj: Object | TitledComponent): obj is TitledComponen
  */
 export default class extends React.Component<RouterState, {}> {
   render() {
-    // Responsibility for rendering a title is decided based on the route;
-    // specifically, the most specific current route for which that route's
-    // component implements a "title" method.
-    const { routes, children } = this.props;
-    let title: React.ReactElement<any>;
+    const child = React.Children.only(this.props.children);
 
-    for (let i = routes.length - 1; i >= 0; i--) {
-      const component: Object | TitledComponent = routes[i].component;
-      if (isTitledComponent(component)) {
-        title = component.title(this.props);
-        break;
-      }
+    let title: string;
+    let header: React.ReactElement<any>;
+
+    if (isTitledComponent(child)) {
+      title = child.title(this.props);
+      header = child.header(this.props);
     }
 
-    return <div>
-      <TimeWindowManager/>
-      <AlertBanner/>
-      <NavigationBar/>
-      <StickyContainer className="page">
-        {
-          // TODO(mrtracy): The title can be moved down to individual pages,
-          // it is not always the top element on the page (for example, on
-          // pages with a back button).
-          !!title
-            ? <section className="section"><h1>{ title }</h1></section>
-            : null
-        }
-        { children }
-      </StickyContainer>
-    </div>;
+    const pageTitle = title ? title + " | Cockroach Console" : "Cockroach Console";
+
+    return (
+      <DocumentTitle title={pageTitle}>
+        <div>
+          <TimeWindowManager/>
+          <AlertBanner/>
+          <NavigationBar/>
+          <StickyContainer className="page">
+            {
+              // TODO(mrtracy): The title can be moved down to individual pages,
+              // it is not always the top element on the page (for example, on
+              // pages with a back button).
+              !!header
+                ? <section className="section">{ header }</section>
+                : null
+            }
+            { child }
+          </StickyContainer>
+        </div>
+      </DocumentTitle>
+    );
   }
 }

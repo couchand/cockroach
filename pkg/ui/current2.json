@@ -1,0 +1,31 @@
+[
+  {
+    "url": "https://api.github.com/repos/cockroachdb/cockroach/statuses/d1258a71c7ccb752ccbc1a7c594772437713c563",
+    "id": 4688918763,
+    "state": "pending",
+    "description": "TeamCity build started",
+    "target_url": "https://teamcity.cockroachdb.com/viewLog.html?buildId=552930&buildTypeId=Cockroach_UnitTests",
+    "context": "GitHub CI (Cockroach)",
+    "created_at": "2018-03-08T15:31:10Z",
+    "updated_at": "2018-03-08T15:31:10Z",
+    "creator": {
+      "login": "cockroach-teamcity",
+      "id": 20559710,
+      "avatar_url": "https://avatars0.githubusercontent.com/u/20559710?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/cockroach-teamcity",
+      "html_url": "https://github.com/cockroach-teamcity",
+      "followers_url": "https://api.github.com/users/cockroach-teamcity/followers",
+      "following_url": "https://api.github.com/users/cockroach-teamcity/following{/other_user}",
+      "gists_url": "https://api.github.com/users/cockroach-teamcity/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/cockroach-teamcity/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/cockroach-teamcity/subscriptions",
+      "organizations_url": "https://api.github.com/users/cockroach-teamcity/orgs",
+      "repos_url": "https://api.github.com/users/cockroach-teamcity/repos",
+      "events_url": "https://api.github.com/users/cockroach-teamcity/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/cockroach-teamcity/received_events",
+      "type": "User",
+      "site_admin": false
+    }
+  }
+]

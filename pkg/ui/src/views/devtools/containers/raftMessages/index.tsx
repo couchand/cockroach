@@ -17,6 +17,7 @@ import TimeScaleDropdown from "src/views/cluster/containers/timescale";
 import Dropdown, { DropdownOption } from "src/views/shared/components/dropdown";
 import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconfig";
 import { MetricsDataProvider } from "src/views/shared/containers/metricDataProvider";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
 import messagesDashboard from "./messages";
 
@@ -37,7 +38,7 @@ type NodeGraphsProps = NodeGraphsOwnProps & RouterState;
 /**
  * NodeGraphs renders the main content of the cluster graphs page.
  */
-class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
+class NodeGraphs extends TitledComponent<NodeGraphsProps, {}> {
   // Magic to add react router to the context.
   // See https://github.com/ReactTraining/react-router/issues/975
   // TODO(mrtracy): Switch this, and the other uses of contextTypes, to use the
@@ -65,7 +66,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
     },
   );
 
-  static title() {
+  title() {
     return "Raft Messages";
   }
 

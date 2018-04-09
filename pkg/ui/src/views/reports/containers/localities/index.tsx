@@ -12,6 +12,7 @@ import { AdminUIState } from "src/redux/state";
 import { findMostSpecificLocation, hasLocation } from "src/util/locations";
 import { getNodeLocalityTiers } from "src/util/localities";
 import Loading from "src/views/shared/components/loading";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
 import "./localities.styl";
 
@@ -77,9 +78,9 @@ interface LocalitiesProps {
   refreshNodes: typeof refreshNodes;
 }
 
-class Localities extends React.Component<LocalitiesProps, {}> {
-  static title() {
-    return <h1>Localities</h1>;
+class Localities extends TitledComponent<LocalitiesProps, {}> {
+  title() {
+    return "Localities";
   }
 
   componentWillMount() {

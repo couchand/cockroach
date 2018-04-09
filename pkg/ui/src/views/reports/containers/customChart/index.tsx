@@ -13,6 +13,7 @@ import Dropdown, { DropdownOption } from "src/views/shared/components/dropdown";
 import { MetricsDataProvider } from "src/views/shared/containers/metricDataProvider";
 import { Metric, Axis, AxisUnits } from "src/views/shared/components/metricQuery";
 import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconfig";
+import { TitledComponent } from "src/views/shared/components/titledComponent";
 
 import { CustomMetricState, CustomMetricRow } from "./customMetric";
 import "./customChart.styl";
@@ -36,7 +37,7 @@ interface UrlState {
   units: string;
 }
 
-class CustomChart extends React.Component<CustomChartProps & WithRouterProps> {
+class CustomChart extends TitledComponent<CustomChartProps & WithRouterProps> {
   // Selector which computes dropdown options based on the nodes available on
   // the cluster.
   private nodeOptions = createSelector(
@@ -80,7 +81,7 @@ class CustomChart extends React.Component<CustomChartProps & WithRouterProps> {
     },
   );
 
-  static title() {
+  title() {
     return "Custom Chart";
   }
 
