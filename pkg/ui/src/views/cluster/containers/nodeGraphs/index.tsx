@@ -13,9 +13,11 @@ import {
 import Dropdown, { DropdownOption } from "src/views/shared/components/dropdown";
 import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconfig";
 import TimeScaleDropdown from "src/views/cluster/containers/timescale";
+import AggregationSelector from "src/views/shared/containers/aggregationSelector";
 import ClusterSummaryBar from "./summaryBar";
 
 import { AdminUIState } from "src/redux/state";
+import { AggregationLevel } from "src/redux/aggregationLevel";
 import { refreshNodes, refreshLiveness } from "src/redux/apiReducers";
 import { hoverStateSelector, HoverState, hoverOn, hoverOff } from "src/redux/hover";
 import { nodesSummarySelector, NodesSummary, LivenessStatus } from "src/redux/nodes";
@@ -224,6 +226,13 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
               onChange={this.dashChange}
             />
           </PageConfigItem>
+          {
+            nodeSources ? null : (
+              <PageConfigItem>
+                <AggregationSelector aggregationLevel={AggregationLevel.Cluster} />
+              </PageConfigItem>
+            )
+          }
           <PageConfigItem>
             <TimeScaleDropdown />
           </PageConfigItem>
