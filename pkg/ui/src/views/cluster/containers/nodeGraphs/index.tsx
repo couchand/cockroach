@@ -17,7 +17,7 @@ import AggregationSelector from "src/views/shared/containers/aggregationSelector
 import ClusterSummaryBar from "./summaryBar";
 
 import { AdminUIState } from "src/redux/state";
-import { AggregationLevel } from "src/redux/aggregationLevel";
+import { AggregationLevel, selectAggregationLevel } from "src/redux/aggregationLevel";
 import { refreshNodes, refreshLiveness } from "src/redux/apiReducers";
 import { hoverStateSelector, HoverState, hoverOn, hoverOff } from "src/redux/hover";
 import { nodesSummarySelector, NodesSummary, LivenessStatus } from "src/redux/nodes";
@@ -74,6 +74,7 @@ interface NodeGraphsOwnProps {
   livenessQueryValid: boolean;
   nodesSummary: NodesSummary;
   hoverState: HoverState;
+  aggregationLevel: AggregationLevel;
 }
 
 type NodeGraphsProps = NodeGraphsOwnProps & RouterState;
@@ -147,7 +148,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
   }
 
   render() {
-    const { params, nodesSummary } = this.props;
+    const { params, nodesSummary, aggregationLevel } = this.props;
     const selectedDashboard = params[dashboardNameAttr];
     const dashboard = _.has(dashboards, selectedDashboard)
       ? selectedDashboard
@@ -181,6 +182,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
       nodeSources,
       storeSources,
       tooltipSelection,
+      aggregationLevel,
     };
 
     const forwardParams = {
@@ -229,7 +231,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
           {
             nodeSources ? null : (
               <PageConfigItem>
-                <AggregationSelector aggregationLevel={AggregationLevel.Cluster} />
+                <AggregationSelector />
               </PageConfigItem>
             )
           }
@@ -260,6 +262,7 @@ export default connect(
       nodesQueryValid: state.cachedData.nodes.valid,
       livenessQueryValid: state.cachedData.nodes.valid,
       hoverState: hoverStateSelector(state),
+      aggregationLevel: selectAggregationLevel(state),
     };
   },
   {
