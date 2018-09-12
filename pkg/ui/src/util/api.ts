@@ -97,6 +97,8 @@ export type StatementsResponseMessage = protos.cockroach.server.serverpb.Stateme
 
 export type DataDistributionResponseMessage = protos.cockroach.server.serverpb.DataDistributionResponse;
 
+export type MetricMetadataResponseMessage = protos.cockroach.server.serverpb.MetricMetadataResponse;
+
 // API constants
 
 export const API_PREFIX = "_admin/v1";
@@ -342,4 +344,9 @@ export function getStatements(timeout?: moment.Duration): Promise<StatementsResp
 // getDataDistribution returns information about how replicas are distributed across nodes.
 export function getDataDistribution(timeout?: moment.Duration): Promise<DataDistributionResponseMessage> {
   return timeoutFetch(serverpb.DataDistributionResponse, `${API_PREFIX}/data_distribution`, null, timeout);
+}
+
+// getMetricMetadata returns metadata about the available metrics on the cluster.
+export function getMetricMetadata(timeout?: moment.Duration): Promise<MetricMetadataResponseMessage> {
+  return timeoutFetch(serverpb.MetricMetadataResponse, `${API_PREFIX}/metricmetadata`, null, timeout);
 }

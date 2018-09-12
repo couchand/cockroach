@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { withRouter, WithRouterProps } from "react-router";
 import { createSelector } from "reselect";
 
-import { refreshNodes } from "src/redux/apiReducers";
+import { refreshNodes, refreshMetricMetadata } from "src/redux/apiReducers";
 import { nodesSummarySelector, NodesSummary } from "src/redux/nodes";
 import { AdminUIState } from "src/redux/state";
 import { LineGraph } from "src/views/cluster/components/linegraph";
@@ -18,17 +18,22 @@ import { PageConfig, PageConfigItem } from "src/views/shared/components/pageconf
 import { CustomChartState, CustomChartTable } from "./customMetric";
 import "./customChart.styl";
 
-import { INodeStatus } from "src/util/proto";
+import { INodeStatus, IMetricMetadata } from "src/util/proto";
 
 export interface CustomChartProps {
   refreshNodes: typeof refreshNodes;
+  refreshMetricMetadata: typeof refreshMetricMetadata;
   nodesQueryValid: boolean;
   nodesSummary: NodesSummary;
+  metricMetadataValid: boolean;
+  metricMetadata: { [metric: string]: IMetricMetadata };
 }
 
 interface UrlState {
   charts: string;
 }
+
+const METRIC_PREFIX_REGEXP = new RegExp("^cr\.(node|store)\.");
 
 class CustomChart extends React.Component<CustomChartProps & WithRouterProps> {
   // Selector which computes dropdown options based on the nodes available on
@@ -78,6 +83,10 @@ class CustomChart extends React.Component<CustomChartProps & WithRouterProps> {
     if (!props.nodesQueryValid) {
       props.refreshNodes();
     }
+
+    if (!props.metricMetadataValid) {
+      props.refreshMetricMetadata();
+    }
   }
 
   componentWillMount() {
@@ -105,6 +114,15 @@ class CustomChart extends React.Component<CustomChartProps & WithRouterProps> {
     } catch (e) {
       return [new CustomChartState()];
     }
+  }
+
+  metricMetadata(metric: string): IMetricMetadata {
+    if (!metric || !this.props.metricMetadataValid) {
+      return null;
+    }
+
+    const metricKey = metric.replace(METRIC_PREFIX_REGEXP, "");
+    return this.props.metricMetadata[metricKey];
   }
 
   updateUrl(newState: Partial<UrlState>) {
@@ -262,11 +280,14 @@ function mapStateToProps(state: AdminUIState) {
   return {
     nodesSummary: nodesSummarySelector(state),
     nodesQueryValid: state.cachedData.nodes.valid,
+    metricMetadata: state.cachedData.metricMetadata.data && state.cachedData.metricMetadata.data.metadata,
+    metricMetadataValid: state.cachedData.metricMetadata.valid,
   };
 }
 
 const mapDispatchToProps = {
   refreshNodes,
+  refreshMetricMetadata,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(CustomChart));

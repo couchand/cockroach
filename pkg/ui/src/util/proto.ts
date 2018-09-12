@@ -97,3 +97,5 @@ export function BytesUsed(s: INodeStatus): number {
     return s.metrics[key];
   });
 }
+
+export type IMetricMetadata = protos.cockroach.util.metric.IMetadata;
