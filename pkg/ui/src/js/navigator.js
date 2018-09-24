@@ -20,8 +20,8 @@ export function navigatorMiddleware(store) {
       const state = store.getState();
       const oldLocation = state.routing.locationBeforeTransitions;
 
-      const newLocation = Object.extend({}, oldLocation, {
-        query: Object.extend({}, oldLocation.query, {
+      const newLocation = Object.assign({}, oldLocation, {
+        query: Object.assign({}, oldLocation.query, {
           [action.payload.param]: action.payload.value,
         }),
       });
