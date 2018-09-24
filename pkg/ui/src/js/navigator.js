@@ -1,8 +1,9 @@
 import { push } from "react-router-redux";
+import { Action, Dispatch, MiddlewareAPI } from "redux";
 
 export const SET_ROUTE_PARAM = "cockroachui/navigator/SET_ROUTE_PARAM";
 
-export function setRouteParam(param: string, value: string) {
+export function setRouteParam(param, value) {
   return {
     type: SET_ROUTE_PARAM,
     payload: { param, value },
@@ -19,13 +20,11 @@ export function navigatorMiddleware(store) {
       const state = store.getState();
       const oldLocation = state.routing.locationBeforeTransitions;
 
-      const newLocation = {
-        ...oldLocation,
-        query: {
-          ...oldLocation.query,
+      const newLocation = Object.extend({}, oldLocation, {
+        query: Object.extend({}, oldLocation.query, {
           [action.payload.param]: action.payload.value,
-        },
-      };
+        }),
+      });
 
       return next(push(newLocation));
     };

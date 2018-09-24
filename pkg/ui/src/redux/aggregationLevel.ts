@@ -1,5 +1,5 @@
 import { AdminUIState } from "src/redux/state";
-import { setRouteParam } from "src/redux/navigator";
+import { setRouteParam } from "src/js/navigator";
 
 export enum AggregationLevel {
   Cluster = "cluster",

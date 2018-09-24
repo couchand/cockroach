@@ -9,7 +9,7 @@ import { apiReducersReducer, APIReducersState } from "./apiReducers";
 import { hoverReducer, HoverState } from "./hover";
 import { localSettingsReducer, LocalSettingsState } from "./localsettings";
 import { metricsReducer, MetricsState, queryMetricsSaga } from "./metrics";
-import { navigatorMiddleware } from "./navigator";
+import { navigatorMiddleware } from "src/js/navigator";
 import { queryManagerReducer, QueryManagerState } from "./queryManager/reducer";
 import { timeWindowReducer, TimeWindowState } from "./timewindow";
 import { uiDataReducer, UIDataState } from "./uiData";
