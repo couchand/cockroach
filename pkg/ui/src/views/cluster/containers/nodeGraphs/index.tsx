@@ -38,8 +38,6 @@ import queuesDashboard from "./dashboards/queues";
 import requestsDashboard from "./dashboards/requests";
 import hardwareDashboard from "./dashboards/hardware";
 
-import { DashboardsPage } from "src/views/metrics";
-
 interface GraphDashboard {
   label: string;
   component: (props: GraphDashboardProps) => React.ReactElement<any>[];
@@ -125,7 +123,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
     }
   }
 
-  setClusterPath(nodeID: string, dashboardName: string, aggregationLevel: AggregationLevel) {
+  setClusterPath(nodeID: string, dashboardName: string, aggregationLevel?: AggregationLevel) {
     if (!_.isString(nodeID) || nodeID === "") {
       const query = aggregationLevel && aggregationLevel !== AggregationLevel.Cluster ? `?agg=${aggregationLevel}` : "";
       this.context.router.push(`/metrics/${dashboardName}/cluster${query}`);
@@ -194,14 +192,19 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
       hoverState: this.props.hoverState,
     };
 
-    const graphComponents = (
-      <DashboardsPage
-        dashboard="overview"
-        aggregationLevel={aggregationLevel}
-        nodeSources={nodeIDs}
-        nodesSummary={nodesSummary}
-      />
-    );
+    // Generate graphs for the current dashboard, wrapping each one in a
+    // MetricsDataProvider with a unique key.
+    const graphs = dashboards[dashboard].component(dashboardProps);
+    const graphComponents = _.map(graphs, (graph, idx) => {
+      const key = `nodes.${dashboard}.${idx}`;
+      return (
+        <div key={key}>
+          <MetricsDataProvider id={key}>
+            { React.cloneElement(graph, forwardParams) }
+          </MetricsDataProvider>
+        </div>
+      );
+    });
 
     return (
       <div>
@@ -229,7 +232,7 @@ class NodeGraphs extends React.Component<NodeGraphsProps, {}> {
           {
             nodeSources ? null : (
               <PageConfigItem>
-                <AggregationSelector aggregationLevel={aggregationLevel} />
+                <AggregationSelector />
               </PageConfigItem>
             )
           }
