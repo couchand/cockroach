@@ -35,7 +35,6 @@ export default function (props: GraphDashboardProps) {
     charts.push(
       <LineGraph
         title="Statements"
-        subtitle="Reads"
         tooltip={"......."}
       >
         <Axis label="queries">
@@ -43,28 +42,7 @@ export default function (props: GraphDashboardProps) {
             _.map(nodeIDs, (node) => (
               <Metric
                 key={node}
-                name="cr.node.sql.select.count"
-                title={nodeDisplayName(nodesSummary, node)}
-                sources={[node]}
-                nonNegativeRate
-              />
-            ))
-          }
-        </Axis>
-      </LineGraph>,
-    );
-    charts.push(
-      <LineGraph
-        title="Statements"
-        subtitle="Updates"
-        tooltip={"......."}
-      >
-        <Axis label="queries">
-          {
-            _.map(nodeIDs, (node) => (
-              <Metric
-                key={node}
-                name="cr.node.sql.update.count"
+                name="cr.node.sql.query.count"
                 title={nodeDisplayName(nodesSummary, node)}
                 sources={[node]}
                 nonNegativeRate
@@ -76,45 +54,32 @@ export default function (props: GraphDashboardProps) {
     );
   }
 
-  if (props.aggregationLevel === AggregationLevel.Cluster) {
-    charts.push(
-      <LineGraph
-        title="Service Latency"
-        sources={nodeSources}
-        tooltip={"....."}
-      >
-        <Axis units={AxisUnits.Duration} label="latency">
-          <Metric name="cr.node.sql.service.latency-p99" title="Service Latency" downsampleMax aggregateAvg />
-        </Axis>
-      </LineGraph>,
-    );
-  } else {
-    charts.push(
-      <LineGraph
-        title="Service Latency"
-        tooltip={(
-          <div>
-            Over the last minute, this node executed 99% of queries within this time.&nbsp;
-              <em>This time does not include network latency between the node and client.</em>
-          </div>
-        )}
-      >
-        <Axis units={AxisUnits.Duration} label="latency">
-          {
-            _.map(nodeIDs, (node) => (
-              <Metric
-                key={node}
-                name="cr.node.sql.service.latency-p99"
-                title={nodeDisplayName(nodesSummary, node)}
-                sources={[node]}
-                downsampleMax
-              />
-            ))
-          }
-        </Axis>
-      </LineGraph>,
-    );
-  }
+  // We cannot currently aggregate percentiles across nodes.
+  charts.push(
+    <LineGraph
+      title="Service Latency"
+      tooltip={(
+        <div>
+          Over the last minute, this node executed 99% of queries within this time.&nbsp;
+            <em>This time does not include network latency between the node and client.</em>
+        </div>
+      )}
+    >
+      <Axis units={AxisUnits.Duration} label="latency">
+        {
+          _.map(nodeIDs, (node) => (
+            <Metric
+              key={node}
+              name="cr.node.sql.service.latency-p99"
+              title={nodeDisplayName(nodesSummary, node)}
+              sources={[node]}
+              downsampleMax
+            />
+          ))
+        }
+      </Axis>
+    </LineGraph>,
+  );
 
   if (props.aggregationLevel === AggregationLevel.Cluster) {
     charts.push(
@@ -125,6 +90,7 @@ export default function (props: GraphDashboardProps) {
       >
         <Axis label="replicas">
           <Metric name="cr.store.replicas" title="Replicas" />
+          <Metric name="cr.store.replicas.quiescent" title="Quiescent" />
         </Axis>
       </LineGraph>,
     );
@@ -156,44 +122,67 @@ export default function (props: GraphDashboardProps) {
     );
   }
 
-  charts.push(
-    <LineGraph
-      title="Capacity"
-      sources={storeSources}
-      tooltip={(
-        <div>
-          <dl>
-            <dt>Capacity</dt>
-            <dd>
-              Total disk space available {tooltipSelection} to CockroachDB.
-              {" "}
-              <em>
-                Control this value per node with the
+  if (props.aggregationLevel === AggregationLevel.Cluster) {
+    charts.push(
+      <LineGraph
+        title="Capacity"
+        sources={storeSources}
+        tooltip={(
+          <div>
+            <dl>
+              <dt>Capacity</dt>
+              <dd>
+                Total disk space available {tooltipSelection} to CockroachDB.
                 {" "}
-                <code>
-                  <a href={docsURL.startFlags} target="_blank">
-                    --store
-                  </a>
-                </code>
-                {" "}
-                flag.
-              </em>
-            </dd>
-            <dt>Available</dt>
-            <dd>Free disk space available {tooltipSelection} to CockroachDB.</dd>
-            <dt>Used</dt>
-            <dd>Disk space used {tooltipSelection} by CockroachDB.</dd>
-          </dl>
-        </div>
-      )}
-    >
-      <Axis units={AxisUnits.Bytes} label="capacity">
-        <Metric name="cr.store.capacity" title="Capacity" />
-        <Metric name="cr.store.capacity.available" title="Available" />
-        <Metric name="cr.store.capacity.used" title="Used" />
-      </Axis>
-    </LineGraph>,
-  );
+                <em>
+                  Control this value per node with the
+                  {" "}
+                  <code>
+                    <a href={docsURL.startFlags} target="_blank">
+                      --store
+                    </a>
+                  </code>
+                  {" "}
+                  flag.
+                </em>
+              </dd>
+              <dt>Available</dt>
+              <dd>Free disk space available {tooltipSelection} to CockroachDB.</dd>
+              <dt>Used</dt>
+              <dd>Disk space used {tooltipSelection} by CockroachDB.</dd>
+            </dl>
+          </div>
+        )}
+      >
+        <Axis units={AxisUnits.Bytes} label="capacity">
+          <Metric name="cr.store.capacity" title="Capacity" />
+          <Metric name="cr.store.capacity.available" title="Available" />
+          <Metric name="cr.store.capacity.used" title="Used" />
+        </Axis>
+      </LineGraph>,
+    );
+  } else {
+    charts.push(
+      <LineGraph
+        title="Capacity"
+        subtitle="Available"
+        tooltip={"........."}
+      >
+        <Axis units={AxisUnits.Bytes} label="capacity">
+          {
+            _.map(nodeIDs, (nid) => (
+              <Metric
+                key={nid}
+                name="cr.store.capacity.available"
+                title={nodeDisplayName(nodesSummary, nid)}
+                sources={storeIDsForNode(nodesSummary, nid)}
+              />
+            ))
+          }
+        </Axis>
+      </LineGraph>,
+    );
+  }
 
   return charts;
 }
