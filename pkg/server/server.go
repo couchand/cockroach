@@ -281,10 +281,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.distSender,
 	)
 
-	dbCtx := client.DefaultDBContext()
-	dbCtx.NodeID = &s.nodeIDContainer
-	dbCtx.Stopper = s.stopper
-	s.db = client.NewDBWithContext(s.cfg.AmbientCtx, s.tcsFactory, s.clock, dbCtx)
+	s.db = startup.InitDB(s.cfg.AmbientCtx, s.tcsFactory, s.clock, &s.nodeIDContainer, s.stopper)
 
 	nlActive, nlRenewal := s.cfg.NodeLivenessDurations()
 
