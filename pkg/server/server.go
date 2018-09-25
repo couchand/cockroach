@@ -238,9 +238,8 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	s.grpc = rpc.NewServerWithInterceptor(s.rpcContext, s.Intercept())
 
-	s.gossip = gossip.New(
+	s.gossip = startup.InitGossip(
 		s.cfg.AmbientCtx,
-		&s.rpcContext.ClusterID,
 		&s.nodeIDContainer,
 		s.rpcContext,
 		s.grpc,
