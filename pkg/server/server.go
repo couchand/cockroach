@@ -605,7 +605,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		execCfg.EvalContextTestingKnobs = *sqlEvalContext.(*tree.EvalContextTestingKnobs)
 	}
 
-	s.pgServer = pgwire.MakeServer(
+	s.pgServer = startup.InitPGServer(
 		s.cfg.AmbientCtx,
 		s.cfg.Config,
 		s.ClusterSettings(),
@@ -613,6 +613,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		&rootSQLMemoryMonitor,
 		s.cfg.HistogramWindowInterval(),
 		&execCfg,
+		s.registry,
 	)
 
 	// Now that we have a pgwire.Server (which has a sql.Server), we can close a
@@ -632,9 +633,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 			return &ie
 		}
 
-	s.registry.AddMetricStruct(s.pgServer.Metrics())
-	s.registry.AddMetricStruct(s.pgServer.StatementCounters())
-	s.registry.AddMetricStruct(s.pgServer.EngineMetrics())
 	*internalExecutor = sql.MakeInternalExecutor(
 		ctx, s.pgServer.SQLServer, s.internalMemMetrics, s.ClusterSettings(),
 	)
