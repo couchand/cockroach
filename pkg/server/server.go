@@ -447,7 +447,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	var err error
 	s.distSQLServer, err = startup.InitDistSQLServer(
-		ctx,
 		s.cfg.AmbientCtx,
 		st,
 		s.db,
@@ -507,7 +506,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	}
 
 	*execCfg = startup.InitExecutorConfig(
-		ctx,
 		s.st,
 		s.cfg.AmbientCtx,
 		s.db,

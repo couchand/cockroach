@@ -40,7 +40,6 @@ import (
 )
 
 func InitExecutorConfig(
-	ctx context.Context,
 	st *cluster.Settings,
 	ambientCtx log.AmbientContext,
 	db *client.DB,
@@ -65,6 +64,8 @@ func InitExecutorConfig(
 	testingKnobs base.TestingKnobs,
 	nodeInfo sql.NodeInfo,
 ) sql.ExecutorConfig {
+	ctx := ambientCtx.AnnotateCtx(context.Background())
+
 	virtualSchemas, err := sql.NewVirtualSchemaHolder(ctx, st)
 	if err != nil {
 		log.Fatal(ctx, err)

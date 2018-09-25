@@ -41,7 +41,6 @@ import (
 )
 
 func InitDistSQLServer(
-	ctx context.Context,
 	ambientCtx log.AmbientContext,
 	st *cluster.Settings,
 	db *client.DB,
@@ -102,6 +101,8 @@ func InitDistSQLServer(
 	if distSQLTestingKnobs := testingKnobs.DistSQL; distSQLTestingKnobs != nil {
 		distSQLCfg.TestingKnobs = *distSQLTestingKnobs.(*distsqlrun.TestingKnobs)
 	}
+
+	ctx := ambientCtx.AnnotateCtx(context.Background())
 
 	distSQLServer := distsqlrun.NewServer(ctx, distSQLCfg)
 	distsqlrun.RegisterDistSQLServer(grpcServer, distSQLServer)
