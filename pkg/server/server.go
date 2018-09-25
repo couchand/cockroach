@@ -362,7 +362,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	internalExecutor := &sql.InternalExecutor{}
 
 	// Similarly for execCfg.
-	var execCfg sql.ExecutorConfig
+	execCfg := &sql.ExecutorConfig{}
 
 	// TODO(bdarnell): make StoreConfig configurable.
 	storeCfg := storage.StoreConfig{
@@ -440,7 +440,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		func(opName, user string) (interface{}, func()) {
 			// This is a hack to get around a Go package dependency cycle. See comment
 			// in sql/jobs/registry.go on planHookMaker.
-			return sql.NewInternalPlanner(opName, nil, user, &sql.MemoryMetrics{}, &execCfg)
+			return sql.NewInternalPlanner(opName, nil, user, &sql.MemoryMetrics{}, execCfg)
 		},
 	)
 	s.registry.AddMetricStruct(s.jobRegistry.MetricsStruct())
@@ -506,7 +506,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		NodeID:    &s.nodeIDContainer,
 	}
 
-	execCfg = startup.InitExecutorConfig(
+	*execCfg = startup.InitExecutorConfig(
 		ctx,
 		s.st,
 		s.cfg.AmbientCtx,
@@ -540,7 +540,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.sqlMemMetrics,
 		&rootSQLMemoryMonitor,
 		s.cfg.HistogramWindowInterval(),
-		&execCfg,
+		execCfg,
 		s.registry,
 	)
 
@@ -551,12 +551,12 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	)
 	s.internalExecutor = internalExecutor
 
-	startup.FinalizeExecutorConfig(&execCfg, internalExecutor)
-	s.execCfg = &execCfg
+	startup.FinalizeExecutorConfig(execCfg, internalExecutor)
+	s.execCfg = execCfg
 
-	startup.FinalizeLeaseManager(s.leaseMgr, &execCfg, s.stopper, s.db, s.gossip)
+	startup.FinalizeLeaseManager(s.leaseMgr, execCfg, s.stopper, s.db, s.gossip)
 
-	s.node.InitLogger(&execCfg)
+	s.node.InitLogger(execCfg)
 
 	return s, nil
 }
