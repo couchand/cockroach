@@ -349,15 +349,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	)
 	rootSQLMemoryMonitor.Start(context.Background(), nil, mon.MakeStandaloneBudget(s.cfg.SQLMemoryPoolSize))
 
-	tempEngine, err := startup.InitTempEngine(
-		cfg.Stores.Specs[s.cfg.TempStorageConfig.SpecIdx],
-		s.cfg.TempStorageConfig,
-		s.stopper,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	s.tsDB = ts.NewDB(s.db, s.cfg.Settings)
 	s.registry.AddMetricStruct(s.tsDB.Metrics())
 	nodeCountFn := func() int64 {
@@ -456,7 +447,8 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	)
 	s.registry.AddMetricStruct(s.jobRegistry.MetricsStruct())
 
-	s.distSQLServer = startup.InitDistSQLServer(
+	var err error
+	s.distSQLServer, err = startup.InitDistSQLServer(
 		ctx,
 		s.cfg.AmbientCtx,
 		st,
@@ -467,7 +459,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.rpcContext,
 		s.stopper,
 		&s.nodeIDContainer,
-		tempEngine,
+		s.cfg.Stores,
 		s.cfg.TempStorageConfig,
 		&rootSQLMemoryMonitor,
 		cfg.HistogramWindowInterval(),
@@ -479,6 +471,9 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.grpc,
 		s.registry,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	s.admin = newAdminServer(s)
 	s.status = newStatusServer(

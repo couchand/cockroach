@@ -33,7 +33,6 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/sql/pgwire"
 	"github.com/cockroachdb/cockroach/pkg/sql/sessiondata"
 	"github.com/cockroachdb/cockroach/pkg/sql/sqlutil"
-	"github.com/cockroachdb/cockroach/pkg/storage/engine"
 	"github.com/cockroachdb/cockroach/pkg/util/hlc"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/cockroach/pkg/util/metric"
@@ -52,7 +51,7 @@ func InitDistSQLServer(
 	rpcContext *rpc.Context,
 	stopper *stop.Stopper,
 	nodeIDContainer *base.NodeIDContainer,
-	tempEngine engine.MapProvidingEngine,
+	stores base.StoreSpecList,
 	tempStorageConfig base.TempStorageConfig,
 	memMonitor *mon.BytesMonitor,
 	histogramWindowInterval time.Duration,
@@ -63,7 +62,16 @@ func InitDistSQLServer(
 	testingKnobs base.TestingKnobs,
 	grpcServer *grpc.Server,
 	registry *metric.Registry,
-) *distsqlrun.ServerImpl {
+) (*distsqlrun.ServerImpl, error) {
+	tempEngine, err := InitTempEngine(
+		stores.Specs[tempStorageConfig.SpecIdx],
+		tempStorageConfig,
+		stopper,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	distSQLMetrics := distsqlrun.MakeDistSQLMetrics(histogramWindowInterval)
 	registry.AddMetricStruct(distSQLMetrics)
 
@@ -98,7 +106,7 @@ func InitDistSQLServer(
 	distSQLServer := distsqlrun.NewServer(ctx, distSQLCfg)
 	distsqlrun.RegisterDistSQLServer(grpcServer, distSQLServer)
 
-	return distSQLServer
+	return distSQLServer, nil
 }
 
 func FinalizeDistSQLServer(
