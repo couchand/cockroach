@@ -56,8 +56,6 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/sql/distsqlrun"
 	"github.com/cockroachdb/cockroach/pkg/sql/pgwire"
 	"github.com/cockroachdb/cockroach/pkg/sql/sem/tree"
-	"github.com/cockroachdb/cockroach/pkg/sql/sessiondata"
-	"github.com/cockroachdb/cockroach/pkg/sql/sqlutil"
 	"github.com/cockroachdb/cockroach/pkg/sql/stats"
 	"github.com/cockroachdb/cockroach/pkg/sqlmigrations"
 	"github.com/cockroachdb/cockroach/pkg/storage"
@@ -458,39 +456,29 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	)
 	s.registry.AddMetricStruct(s.jobRegistry.MetricsStruct())
 
-	distSQLMetrics := distsqlrun.MakeDistSQLMetrics(cfg.HistogramWindowInterval())
-	s.registry.AddMetricStruct(distSQLMetrics)
-
-	// Set up the DistSQL server.
-	distSQLCfg := distsqlrun.ServerConfig{
-		AmbientContext: s.cfg.AmbientCtx,
-		Settings:       st,
-		DB:             s.db,
-		Executor:       internalExecutor,
-		FlowDB:         client.NewDB(s.cfg.AmbientCtx, s.tcsFactory, s.clock),
-		RPCContext:     s.rpcContext,
-		Stopper:        s.stopper,
-		NodeID:         &s.nodeIDContainer,
-		ClusterID:      &s.rpcContext.ClusterID,
-
-		TempStorage: tempEngine,
-		DiskMonitor: s.cfg.TempStorageConfig.Mon,
-
-		ParentMemoryMonitor: &rootSQLMemoryMonitor,
-
-		Metrics: &distSQLMetrics,
-
-		JobRegistry:  s.jobRegistry,
-		Gossip:       s.gossip,
-		NodeDialer:   s.nodeDialer,
-		LeaseManager: s.leaseMgr,
-	}
-	if distSQLTestingKnobs := s.cfg.TestingKnobs.DistSQL; distSQLTestingKnobs != nil {
-		distSQLCfg.TestingKnobs = *distSQLTestingKnobs.(*distsqlrun.TestingKnobs)
-	}
-
-	s.distSQLServer = distsqlrun.NewServer(ctx, distSQLCfg)
-	distsqlrun.RegisterDistSQLServer(s.grpc, s.distSQLServer)
+	s.distSQLServer = startup.InitDistSQLServer(
+		ctx,
+		s.cfg.AmbientCtx,
+		st,
+		s.db,
+		internalExecutor,
+		s.tcsFactory,
+		s.clock,
+		s.rpcContext,
+		s.stopper,
+		&s.nodeIDContainer,
+		tempEngine,
+		s.cfg.TempStorageConfig,
+		&rootSQLMemoryMonitor,
+		cfg.HistogramWindowInterval(),
+		s.jobRegistry,
+		s.gossip,
+		s.nodeDialer,
+		s.leaseMgr,
+		s.cfg.TestingKnobs,
+		s.grpc,
+		s.registry,
+	)
 
 	s.admin = newAdminServer(s)
 	s.status = newStatusServer(
@@ -616,22 +604,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.registry,
 	)
 
-	// Now that we have a pgwire.Server (which has a sql.Server), we can close a
-	// circular dependency between the distsqlrun.Server and sql.Server and set
-	// SessionBoundInternalExecutorFactory.
-	s.distSQLServer.ServerConfig.SessionBoundInternalExecutorFactory =
-		func(
-			ctx context.Context, sessionData *sessiondata.SessionData,
-		) sqlutil.InternalExecutor {
-			ie := sql.MakeSessionBoundInternalExecutor(
-				ctx,
-				sessionData,
-				s.pgServer.SQLServer,
-				s.sqlMemMetrics,
-				s.st,
-			)
-			return &ie
-		}
+	startup.FinalizeDistSQLServer(s.distSQLServer, s.pgServer, s.sqlMemMetrics, s.st)
 
 	*internalExecutor = sql.MakeInternalExecutor(
 		ctx, s.pgServer.SQLServer, s.internalMemMetrics, s.ClusterSettings(),
