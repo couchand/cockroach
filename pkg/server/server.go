@@ -24,7 +24,6 @@ import (
 	"math"
 	"net"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -350,34 +349,14 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	)
 	rootSQLMemoryMonitor.Start(context.Background(), nil, mon.MakeStandaloneBudget(s.cfg.SQLMemoryPoolSize))
 
-	// Set up the DistSQL temp engine.
-
-	useStoreSpec := cfg.Stores.Specs[s.cfg.TempStorageConfig.SpecIdx]
-	tempEngine, err := engine.NewTempEngine(s.cfg.TempStorageConfig, useStoreSpec)
+	tempEngine, err := startup.InitTempEngine(
+		cfg.Stores.Specs[s.cfg.TempStorageConfig.SpecIdx],
+		s.cfg.TempStorageConfig,
+		s.stopper,
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create temp storage")
+		return nil, err
 	}
-	s.stopper.AddCloser(tempEngine)
-	// Remove temporary directory linked to tempEngine after closing
-	// tempEngine.
-	s.stopper.AddCloser(stop.CloserFn(func() {
-		firstStore := cfg.Stores.Specs[s.cfg.TempStorageConfig.SpecIdx]
-		var err error
-		if firstStore.InMemory {
-			// First store is in-memory so we remove the temp
-			// directory directly since there is no record file.
-			err = os.RemoveAll(s.cfg.TempStorageConfig.Path)
-		} else {
-			// If record file exists, we invoke CleanupTempDirs to
-			// also remove the record after the temp directory is
-			// removed.
-			recordPath := filepath.Join(firstStore.Path, TempDirsRecordFilename)
-			err = engine.CleanupTempDirs(recordPath)
-		}
-		if err != nil {
-			log.Errorf(context.TODO(), "could not remove temporary store directory: %v", err.Error())
-		}
-	}))
 
 	// Set up admin memory metrics for use by admin SQL executors.
 	s.adminMemMetrics = sql.MakeMemMetrics("admin", cfg.HistogramWindowInterval())

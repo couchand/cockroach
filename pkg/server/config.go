@@ -63,9 +63,7 @@ const (
 	// TempDirPrefix is the filename prefix of any temporary subdirectory
 	// created.
 	TempDirPrefix = "cockroach-temp"
-	// TempDirsRecordFilename is the filename for the record file
-	// that keeps track of the paths of the temporary directories created.
-	TempDirsRecordFilename = "temp-dirs-record.txt"
+
 	defaultEventLogEnabled = true
 
 	maximumMaxClockOffset = 5 * time.Second

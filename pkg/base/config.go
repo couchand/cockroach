@@ -88,6 +88,10 @@ const (
 	// DefaultTableDescriptorLeaseRenewalTimeout is the default time
 	// before a lease expires when acquisition to renew the lease begins.
 	DefaultTableDescriptorLeaseRenewalTimeout = time.Minute
+
+	// TempDirsRecordFilename is the filename for the record file
+	// that keeps track of the paths of the temporary directories created.
+	TempDirsRecordFilename = "temp-dirs-record.txt"
 )
 
 var (

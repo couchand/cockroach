@@ -304,7 +304,7 @@ func initTempStorageConfig(
 ) (base.TempStorageConfig, error) {
 	var recordPath string
 	if !firstStore.InMemory {
-		recordPath = filepath.Join(firstStore.Path, server.TempDirsRecordFilename)
+		recordPath = filepath.Join(firstStore.Path, base.TempDirsRecordFilename)
 	}
 
 	var err error
