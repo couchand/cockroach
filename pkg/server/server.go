@@ -232,8 +232,13 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	// bootstrapped; otherwise a new one is allocated in Node.
 	s.cfg.AmbientCtx.AddLogTag("n", &s.nodeIDContainer)
 
-	s.rpcContext = startup.InitRPCContext(s.cfg.AmbientCtx, s.cfg.Config, s.clock, s.stopper,
-		&cfg.Settings.Version)
+	s.rpcContext = startup.InitRPCContext(
+		s.cfg.AmbientCtx,
+		s.cfg.Config,
+		s.clock,
+		s.stopper,
+		&cfg.Settings.Version,
+	)
 
 	s.grpc = rpc.NewServerWithInterceptor(s.rpcContext, s.Intercept())
 
@@ -246,6 +251,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.registry,
 		s.cfg.Locality,
 	)
+
 	s.nodeDialer = nodedialer.New(s.rpcContext, gossip.AddressResolver(s.gossip))
 
 	var clientTestingKnobs kv.ClientTestingKnobs
@@ -281,7 +287,13 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.distSender,
 	)
 
-	s.db = startup.InitDB(s.cfg.AmbientCtx, s.tcsFactory, s.clock, &s.nodeIDContainer, s.stopper)
+	s.db = startup.InitDB(
+		s.cfg.AmbientCtx,
+		s.tcsFactory,
+		s.clock,
+		&s.nodeIDContainer,
+		s.stopper,
+	)
 
 	nlActive, nlRenewal := s.cfg.NodeLivenessDurations()
 
