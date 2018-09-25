@@ -55,8 +55,6 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/sql"
 	"github.com/cockroachdb/cockroach/pkg/sql/distsqlrun"
 	"github.com/cockroachdb/cockroach/pkg/sql/pgwire"
-	"github.com/cockroachdb/cockroach/pkg/sql/sem/tree"
-	"github.com/cockroachdb/cockroach/pkg/sql/stats"
 	"github.com/cockroachdb/cockroach/pkg/sqlmigrations"
 	"github.com/cockroachdb/cockroach/pkg/storage"
 	"github.com/cockroachdb/cockroach/pkg/storage/closedts/container"
@@ -508,85 +506,32 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		NodeID:    &s.nodeIDContainer,
 	}
 
-	virtualSchemas, err := sql.NewVirtualSchemaHolder(ctx, st)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-
-	// Set up Executor
-
-	var sqlExecutorTestingKnobs *sql.ExecutorTestingKnobs
-	if k := s.cfg.TestingKnobs.SQLExecutor; k != nil {
-		sqlExecutorTestingKnobs = k.(*sql.ExecutorTestingKnobs)
-	} else {
-		sqlExecutorTestingKnobs = new(sql.ExecutorTestingKnobs)
-	}
-
-	execCfg = sql.ExecutorConfig{
-		Settings:                s.st,
-		NodeInfo:                nodeInfo,
-		AmbientCtx:              s.cfg.AmbientCtx,
-		DB:                      s.db,
-		Gossip:                  s.gossip,
-		MetricsRecorder:         s.recorder,
-		DistSender:              s.distSender,
-		RPCContext:              s.rpcContext,
-		LeaseManager:            s.leaseMgr,
-		Clock:                   s.clock,
-		DistSQLSrv:              s.distSQLServer,
-		StatusServer:            s.status,
-		SessionRegistry:         s.sessionRegistry,
-		JobRegistry:             s.jobRegistry,
-		VirtualSchemas:          virtualSchemas,
-		HistogramWindowInterval: s.cfg.HistogramWindowInterval(),
-		RangeDescriptorCache:    s.distSender.RangeDescriptorCache(),
-		LeaseHolderCache:        s.distSender.LeaseHolderCache(),
-		TestingKnobs:            sqlExecutorTestingKnobs,
-
-		DistSQLPlanner: sql.NewDistSQLPlanner(
-			ctx,
-			distsqlrun.Version,
-			s.st,
-			// The node descriptor will be set later, once it is initialized.
-			roachpb.NodeDescriptor{},
-			s.rpcContext,
-			s.distSQLServer,
-			s.distSender,
-			s.gossip,
-			s.stopper,
-			s.nodeLiveness,
-			s.nodeDialer,
-		),
-
-		TableStatsCache: stats.NewTableStatisticsCache(
-			s.cfg.SQLTableStatCacheSize,
-			s.gossip,
-			s.db,
-			internalExecutor,
-		),
-
-		ExecLogger: log.NewSecondaryLogger(
-			nil /* dirName */, "sql-exec", true /* enableGc */, false, /*forceSyncWrites*/
-		),
-
-		AuditLogger: log.NewSecondaryLogger(
-			s.cfg.SQLAuditLogDirName, "sql-audit", true /*enableGc*/, true, /*forceSyncWrites*/
-		),
-	}
-
-	if sqlSchemaChangerTestingKnobs := s.cfg.TestingKnobs.SQLSchemaChanger; sqlSchemaChangerTestingKnobs != nil {
-		execCfg.SchemaChangerTestingKnobs = sqlSchemaChangerTestingKnobs.(*sql.SchemaChangerTestingKnobs)
-	} else {
-		execCfg.SchemaChangerTestingKnobs = new(sql.SchemaChangerTestingKnobs)
-	}
-	if distSQLRunTestingKnobs := s.cfg.TestingKnobs.DistSQL; distSQLRunTestingKnobs != nil {
-		execCfg.DistSQLRunTestingKnobs = distSQLRunTestingKnobs.(*distsqlrun.TestingKnobs)
-	} else {
-		execCfg.DistSQLRunTestingKnobs = new(distsqlrun.TestingKnobs)
-	}
-	if sqlEvalContext := s.cfg.TestingKnobs.SQLEvalContext; sqlEvalContext != nil {
-		execCfg.EvalContextTestingKnobs = *sqlEvalContext.(*tree.EvalContextTestingKnobs)
-	}
+	execCfg = startup.InitExecutorConfig(
+		ctx,
+		s.st,
+		s.cfg.AmbientCtx,
+		s.db,
+		s.gossip,
+		s.recorder,
+		s.distSender,
+		s.rpcContext,
+		s.leaseMgr,
+		s.clock,
+		s.distSQLServer,
+		s.status,
+		s.sessionRegistry,
+		s.jobRegistry,
+		s.cfg.HistogramWindowInterval(),
+		s.stopper,
+		s.nodeLiveness,
+		s.nodeDialer,
+		s.cfg.SQLTableStatCacheSize,
+		internalExecutor,
+		s.cfg.SQLAuditLogDirName,
+		s.cfg.ConnResultsBufferBytes,
+		cfg.TestingKnobs,
+		nodeInfo,
+	)
 
 	s.pgServer = startup.InitPGServer(
 		s.cfg.AmbientCtx,
@@ -605,8 +550,8 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		ctx, s.pgServer.SQLServer, s.internalMemMetrics, s.ClusterSettings(),
 	)
 	s.internalExecutor = internalExecutor
-	execCfg.InternalExecutor = internalExecutor
 
+	startup.FinalizeExecutorConfig(&execCfg, internalExecutor)
 	s.execCfg = &execCfg
 
 	startup.FinalizeLeaseManager(s.leaseMgr, &execCfg, s.stopper, s.db, s.gossip)
