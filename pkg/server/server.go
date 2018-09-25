@@ -233,15 +233,8 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	// bootstrapped; otherwise a new one is allocated in Node.
 	s.cfg.AmbientCtx.AddLogTag("n", &s.nodeIDContainer)
 
-	ctx := s.AnnotateCtx(context.Background())
-
-	s.rpcContext = rpc.NewContext(s.cfg.AmbientCtx, s.cfg.Config, s.clock, s.stopper,
+	s.rpcContext = startup.InitRPCContext(s.cfg.AmbientCtx, s.cfg.Config, s.clock, s.stopper,
 		&cfg.Settings.Version)
-	s.rpcContext.HeartbeatCB = func() {
-		if err := s.rpcContext.RemoteClocks.VerifyClockOffset(ctx); err != nil {
-			log.Fatal(ctx, err)
-		}
-	}
 
 	s.grpc = rpc.NewServerWithInterceptor(s.rpcContext, s.Intercept())
 
@@ -466,6 +459,8 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	s.recorder = status.NewMetricsRecorder(s.clock, s.nodeLiveness, s.rpcContext, s.gossip, st)
 	s.registry.AddMetricStruct(s.rpcContext.RemoteClocks.Metrics())
+
+	ctx := s.AnnotateCtx(context.Background())
 
 	s.runtime = status.NewRuntimeStatSampler(ctx, s.clock)
 	s.registry.AddMetricStruct(s.runtime)
