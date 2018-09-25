@@ -268,16 +268,18 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	txnMetrics := kv.MakeTxnMetrics(s.cfg.HistogramWindowInterval())
 	s.registry.AddMetricStruct(txnMetrics)
-	txnCoordSenderFactoryCfg := kv.TxnCoordSenderFactoryConfig{
-		AmbientCtx:   s.cfg.AmbientCtx,
-		Settings:     st,
-		Clock:        s.clock,
-		Stopper:      s.stopper,
-		Linearizable: s.cfg.Linearizable,
-		Metrics:      txnMetrics,
-		TestingKnobs: clientTestingKnobs,
-	}
-	s.tcsFactory = kv.NewTxnCoordSenderFactory(txnCoordSenderFactoryCfg, s.distSender)
+
+	s.tcsFactory = startup.InitTxnCoordSenderFactory(
+		s.cfg.AmbientCtx,
+		st,
+		s.clock,
+		s.stopper,
+		s.cfg.Linearizable,
+		txnMetrics,
+		clientTestingKnobs,
+		s.registry,
+		s.distSender,
+	)
 
 	dbCtx := client.DefaultDBContext()
 	dbCtx.NodeID = &s.nodeIDContainer
