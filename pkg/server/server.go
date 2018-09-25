@@ -49,6 +49,7 @@ import (
 	"github.com/cockroachdb/cockroach/pkg/server/debug"
 	"github.com/cockroachdb/cockroach/pkg/server/heapprofiler"
 	"github.com/cockroachdb/cockroach/pkg/server/serverpb"
+	"github.com/cockroachdb/cockroach/pkg/server/startup"
 	"github.com/cockroachdb/cockroach/pkg/server/status"
 	"github.com/cockroachdb/cockroach/pkg/settings"
 	"github.com/cockroachdb/cockroach/pkg/settings/cluster"
@@ -198,10 +199,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	st := cfg.Settings
 
-	if cfg.AmbientCtx.Tracer == nil {
-		panic(errors.New("no tracer set in AmbientCtx"))
-	}
-
 	clock := hlc.NewClock(hlc.UnixNano, time.Duration(cfg.MaxOffset))
 	s := &Server{
 		st:       st,
@@ -212,10 +209,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	}
 	s.serveMode.set(modeInitializing)
 
-	// If the tracer has a Close function, call it after the server stops.
-	if tr, ok := cfg.AmbientCtx.Tracer.(stop.Closer); ok {
-		stopper.AddCloser(tr)
-	}
+	startup.InitTracer(cfg.AmbientCtx, stopper)
 
 	// Attempt to load TLS configs right away, failures are permanent.
 	if certMgr, err := cfg.InitializeNodeTLSConfigs(stopper); err != nil {
