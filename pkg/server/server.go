@@ -323,17 +323,11 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	s.internalMemMetrics = sql.MakeMemMetrics("internal", cfg.HistogramWindowInterval())
 	s.registry.AddMetricStruct(s.internalMemMetrics)
 
-	// Set up Lease Manager
-	var lmKnobs sql.LeaseManagerTestingKnobs
-	if leaseManagerTestingKnobs := cfg.TestingKnobs.SQLLeaseManager; leaseManagerTestingKnobs != nil {
-		lmKnobs = *leaseManagerTestingKnobs.(*sql.LeaseManagerTestingKnobs)
-	}
-	s.leaseMgr = sql.NewLeaseManager(
+	s.leaseMgr = startup.InitLeaseManager(
 		s.cfg.AmbientCtx,
-		nil, /* execCfg - will be set later because of circular dependencies */
-		lmKnobs,
 		s.stopper,
 		s.cfg.LeaseManagerConfig,
+		s.cfg.TestingKnobs,
 	)
 
 	// We do not set memory monitors or a noteworthy limit because the children of
@@ -648,9 +642,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	s.execCfg = &execCfg
 
-	s.leaseMgr.SetExecCfg(&execCfg)
-	s.leaseMgr.RefreshLeases(s.stopper, s.db, s.gossip)
-	s.leaseMgr.PeriodicallyRefreshSomeLeases()
+	startup.FinalizeLeaseManager(s.leaseMgr, &execCfg, s.stopper, s.db, s.gossip)
 
 	s.node.InitLogger(&execCfg)
 
