@@ -319,16 +319,24 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		s.cfg.AmbientCtx, st, s.nodeDialer, s.grpc, s.stopper,
 	)
 
-	// Set up internal memory metrics for use by internal SQL executors.
-	s.internalMemMetrics = sql.MakeMemMetrics("internal", cfg.HistogramWindowInterval())
-	s.registry.AddMetricStruct(s.internalMemMetrics)
-
 	s.leaseMgr = startup.InitLeaseManager(
 		s.cfg.AmbientCtx,
 		s.stopper,
 		s.cfg.LeaseManagerConfig,
 		s.cfg.TestingKnobs,
 	)
+
+	// Set up internal memory metrics for use by internal SQL executors.
+	s.internalMemMetrics = sql.MakeMemMetrics("internal", cfg.HistogramWindowInterval())
+	s.registry.AddMetricStruct(s.internalMemMetrics)
+
+	// Set up admin memory metrics for use by admin SQL executors.
+	s.adminMemMetrics = sql.MakeMemMetrics("admin", cfg.HistogramWindowInterval())
+	s.registry.AddMetricStruct(s.adminMemMetrics)
+
+	// Set up internal memory metrics for use by internal SQL executors.
+	s.sqlMemMetrics = sql.MakeMemMetrics("sql", cfg.HistogramWindowInterval())
+	s.registry.AddMetricStruct(s.sqlMemMetrics)
 
 	// We do not set memory monitors or a noteworthy limit because the children of
 	// this monitor will be setting their own noteworthy limits.
@@ -351,10 +359,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Set up admin memory metrics for use by admin SQL executors.
-	s.adminMemMetrics = sql.MakeMemMetrics("admin", cfg.HistogramWindowInterval())
-	s.registry.AddMetricStruct(s.adminMemMetrics)
 
 	s.tsDB = ts.NewDB(s.db, s.cfg.Settings)
 	s.registry.AddMetricStruct(s.tsDB.Metrics())
@@ -601,9 +605,6 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 		execCfg.EvalContextTestingKnobs = *sqlEvalContext.(*tree.EvalContextTestingKnobs)
 	}
 
-	// Set up internal memory metrics for use by internal SQL executors.
-	s.sqlMemMetrics = sql.MakeMemMetrics("sql", cfg.HistogramWindowInterval())
-	s.registry.AddMetricStruct(s.sqlMemMetrics)
 	s.pgServer = pgwire.MakeServer(
 		s.cfg.AmbientCtx,
 		s.cfg.Config,
