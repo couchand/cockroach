@@ -205,13 +205,7 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	startup.InitTracer(cfg.AmbientCtx, stopper)
 
-	// Attempt to load TLS configs right away, failures are permanent.
-	if certMgr, err := cfg.InitializeNodeTLSConfigs(stopper); err != nil {
-		return nil, err
-	} else if certMgr != nil {
-		// The certificate manager is non-nil in secure mode.
-		s.registry.AddMetricStruct(certMgr.Metrics())
-	}
+	startup.InitTLSConfigs(cfg.Config, s.registry, stopper)
 
 	// Add a dynamic log tag value for the node ID.
 	//
