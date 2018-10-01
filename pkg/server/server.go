@@ -243,37 +243,20 @@ func NewServer(cfg Config, stopper *stop.Stopper) (*Server, error) {
 
 	s.nodeDialer = nodedialer.New(s.rpcContext, gossip.AddressResolver(s.gossip))
 
-	var clientTestingKnobs kv.ClientTestingKnobs
-	if kvKnobs := s.cfg.TestingKnobs.KVClient; kvKnobs != nil {
-		clientTestingKnobs = *kvKnobs.(*kv.ClientTestingKnobs)
-	}
-
-	s.distSender = startup.InitDistSender(
+	var txnMetrics kv.TxnMetrics
+	s.distSender, s.tcsFactory, txnMetrics = startup.InitKV(
+		s.cfg.TestingKnobs,
 		s.cfg.AmbientCtx,
 		st,
 		s.clock,
 		s.rpcContext,
 		s.cfg.RetryOptions,
-		clientTestingKnobs,
 		s.stopper,
 		s.nodeDialer,
 		s.registry,
 		s.gossip,
-	)
-
-	txnMetrics := kv.MakeTxnMetrics(s.cfg.HistogramWindowInterval())
-	s.registry.AddMetricStruct(txnMetrics)
-
-	s.tcsFactory = startup.InitTxnCoordSenderFactory(
-		s.cfg.AmbientCtx,
-		st,
-		s.clock,
-		s.stopper,
+		s.cfg.HistogramWindowInterval(),
 		s.cfg.Linearizable,
-		txnMetrics,
-		clientTestingKnobs,
-		s.registry,
-		s.distSender,
 	)
 
 	s.db = startup.InitDB(
