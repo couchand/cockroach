@@ -256,6 +256,9 @@ type Server struct {
 	// dbCache is a cache for database descriptors, maintained through Gossip
 	// updates.
 	dbCache *databaseCacheHolder
+
+	// txnStats tracks transaction statistics.
+	txnStats []txnExecution
 }
 
 // NewServer creates a new Server. Start() needs to be called before the Server
@@ -283,6 +286,7 @@ func NewServer(cfg *ExecutorConfig, pool *mon.BytesMonitor) *Server {
 		pool:     pool,
 		sqlStats: sqlStats{st: cfg.Settings, apps: make(map[string]*appStats)},
 		reCache:  tree.NewRegexpCache(512),
+		txnStats: make([]txnExecution, 10),
 	}
 }
 
@@ -514,6 +518,7 @@ func (s *Server) newConnExecutor(
 		dbCacheSubscriber: s.dbCache,
 	}
 	ex.extraTxnState.txnRewindPos = -1
+	ex.extraTxnState.txnStats = newTxnStatsCollector()
 	ex.mu.ActiveQueries = make(map[ClusterWideID]*queryMeta)
 	ex.machine = fsm.MakeMachine(TxnStateTransitions, stateNoTxn{}, &ex.state)
 
@@ -796,6 +801,9 @@ type connExecutor struct {
 		// txnRewindPos is advanced. Prepared statements are shared between the two
 		// collections, but these collections are periodically reconciled.
 		prepStmtsNamespaceAtTxnRewindPos prepStmtNamespace
+
+		// txnStats collects statistics about the current transaction.
+		txnStats *txnStatsCollector
 	}
 
 	// sessionData contains the user-configurable connection variables.
@@ -968,6 +976,9 @@ func (ex *connExecutor) resetExtraTxnState(
 	ex.extraTxnState.tables.databaseCache = dbCacheHolder.getDatabaseCache()
 
 	ex.extraTxnState.autoRetryCounter = 0
+
+	ex.extraTxnState.txnStats.reset()
+
 	return nil
 }
 
@@ -1895,6 +1906,12 @@ func (ex *connExecutor) txnStateTransitionsApplyWrapper(
 		ex.extraTxnState.autoRetryCounter++
 	}
 
+	if advInfo.txnEvent == txnCommit || advInfo.txnEvent == txnRestart || advInfo.txnEvent == txnAborted {
+		ex.server.txnStats = append(ex.server.txnStats, ex.extraTxnState.txnStats.export())
+
+		log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.txnStats)
+	}
+
 	// Handle transaction events which cause updates to txnState.
 	switch advInfo.txnEvent {
 	case noEvent:
@@ -1950,6 +1967,10 @@ func (ex *connExecutor) txnStateTransitionsApplyWrapper(
 		}
 	default:
 		return advanceInfo{}, errors.Errorf("unexpected event: %v", advInfo.txnEvent)
+	}
+
+	if advInfo.txnEvent == txnStart || advInfo.txnEvent == txnRestart {
+		ex.extraTxnState.txnStats.start()
 	}
 
 	return advInfo, nil

@@ -153,6 +153,11 @@ func (ex *connExecutor) recordStatementSummary(
 		parseLat, planLat, runLat, svcLat, execOverhead,
 	)
 
+	ex.extraTxnState.txnStats.recordStatement(
+		stmt, distSQLUsed, optUsed, automaticRetryCount, rowsAffected, err,
+		parseLat, planLat, runLat, svcLat, execOverhead,
+	)
+
 	if log.V(2) {
 		// ages since significant epochs
 		sessionAge := phaseTimes[plannerEndExecStmt].
