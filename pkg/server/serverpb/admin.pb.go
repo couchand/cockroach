@@ -126,6 +126,11 @@
 		StoresResponse
 		StatementsRequest
 		StatementsResponse
+		StmtExecution
+		TxnAttempt
+		TxnExecution
+		TransactionsRequest
+		TransactionsResponse
 */
 package serverpb
 
