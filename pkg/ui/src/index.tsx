@@ -30,6 +30,7 @@ import {
 
 import { alertDataSync } from "src/redux/alerts";
 import "src/redux/analytics";
+import { refreshTransactions } from "src/redux/apiReducers";
 import { store, history } from "src/redux/state";
 
 import loginRoutes from "src/routes/login";
@@ -206,3 +207,7 @@ ReactDOM.render(
 );
 
 store.subscribe(alertDataSync(store));
+
+setInterval(() => {
+    store.dispatch(refreshTransactions());
+}, 2000);

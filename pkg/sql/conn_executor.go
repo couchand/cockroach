@@ -258,7 +258,7 @@ type Server struct {
 	dbCache *databaseCacheHolder
 
 	// txnStats tracks transaction statistics.
-	txnStats []txnExecution
+	TxnStats []TxnExecution
 }
 
 // NewServer creates a new Server. Start() needs to be called before the Server
@@ -286,7 +286,7 @@ func NewServer(cfg *ExecutorConfig, pool *mon.BytesMonitor) *Server {
 		pool:     pool,
 		sqlStats: sqlStats{st: cfg.Settings, apps: make(map[string]*appStats)},
 		reCache:  tree.NewRegexpCache(512),
-		txnStats: make([]txnExecution, 10),
+		TxnStats: make([]TxnExecution, 10),
 	}
 }
 
@@ -976,8 +976,6 @@ func (ex *connExecutor) resetExtraTxnState(
 	ex.extraTxnState.tables.databaseCache = dbCacheHolder.getDatabaseCache()
 
 	ex.extraTxnState.autoRetryCounter = 0
-
-	ex.extraTxnState.txnStats.reset()
 
 	return nil
 }
@@ -1906,12 +1904,13 @@ func (ex *connExecutor) txnStateTransitionsApplyWrapper(
 		ex.extraTxnState.autoRetryCounter++
 	}
 
-	if advInfo.txnEvent == txnCommit || advInfo.txnEvent == txnRestart || advInfo.txnEvent == txnAborted {
-		ex.server.txnStats = append(ex.server.txnStats, ex.extraTxnState.txnStats.export())
+	/*
+		if advInfo.txnEvent == txnCommit || advInfo.txnEvent == txnRestart || advInfo.txnEvent == txnAborted {
+			ex.server.txnStats = append(ex.server.txnStats, ex.extraTxnState.txnStats.export())
 
-		log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.txnStats)
-	}
-
+			log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.txnStats)
+		}
+	*/
 	// Handle transaction events which cause updates to txnState.
 	switch advInfo.txnEvent {
 	case noEvent:
@@ -1969,8 +1968,14 @@ func (ex *connExecutor) txnStateTransitionsApplyWrapper(
 		return advanceInfo{}, errors.Errorf("unexpected event: %v", advInfo.txnEvent)
 	}
 
-	if advInfo.txnEvent == txnStart || advInfo.txnEvent == txnRestart {
-		ex.extraTxnState.txnStats.start()
+	/*
+		if advInfo.txnEvent == txnStart || advInfo.txnEvent == txnRestart {
+			ex.extraTxnState.txnStats.start()
+		}
+	*/
+	if flush := ex.extraTxnState.txnStats.acceptAdvanceInfo(advInfo); flush != nil {
+		ex.server.TxnStats = append(ex.server.TxnStats, flush...)
+		log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.TxnStats)
 	}
 
 	return advInfo, nil

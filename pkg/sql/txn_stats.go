@@ -16,47 +16,59 @@ package sql
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 	"github.com/cockroachdb/cockroach/pkg/util/timeutil"
 )
 
-// stmtExecution collects statistics related to the execution of a single
+// StmtExecution collects statistics related to the execution of a single
 // statement within a transaction.
-type stmtExecution struct {
-	// The start time offset relative to the transaction start.
-	startTime   float64
-	stmt        Statement
-	distSQLUsed bool
-	optUsed     bool
-	retryCount  int
-	numRows     int
-	err         error
-	parseLat    float64
-	planLat     float64
-	runLat      float64
-	serviceLat  float64
-	overheadLat float64
+type StmtExecution struct {
+	StartTime   time.Time
+	Stmt        string
+	DistSQLUsed bool
+	OptUsed     bool
+	RetryCount  int64
+	NumRows     int64
+	Err         error
+	ParseLat    float64
+	PlanLat     float64
+	RunLat      float64
+	ServiceLat  float64
+	OverheadLat float64
 }
 
-// txnExecution collects statistics related to a transaction.
-type txnExecution struct {
-	startTime  time.Time
-	duration   float64
-	statements []stmtExecution
+type TxnAttempt struct {
+	StartTime  time.Time
+	Statements []StmtExecution
+}
+
+// TxnExecution collects statistics related to a transaction.
+type TxnExecution struct {
+	StartTime time.Time
+	Duration  float64
+	Aborted   bool
+	Attempts  []TxnAttempt
 }
 
 // txnStatsCollector collects statistics related to a transaction.
 type txnStatsCollector struct {
-	startTime  time.Time
-	statements []stmtExecution
+	startTime time.Time
+	attempts  []TxnAttempt
 }
 
 func newTxnStatsCollector() *txnStatsCollector {
+	attempts := []TxnAttempt{
+		TxnAttempt{
+			StartTime:  time.Time{},
+			Statements: make([]StmtExecution, 0, 10),
+		},
+	}
 	return &txnStatsCollector{
-		startTime:  time.Time{},
-		statements: make([]stmtExecution, 10),
+		startTime: time.Time{},
+		attempts:  attempts,
 	}
 }
 
@@ -73,36 +85,78 @@ func (ts *txnStatsCollector) recordStatement(
 		log.Fatalf(context.Background(), "attempted to record a statement outside a transaction!")
 	}
 
-	startTime := timeutil.Since(ts.startTime).Seconds()
-	ts.statements = append(ts.statements, stmtExecution{
-		startTime:   startTime,
-		stmt:        stmt,
-		distSQLUsed: distSQLUsed,
-		optUsed:     optUsed,
-		retryCount:  retryCount,
-		numRows:     numRows,
-		err:         err,
-		parseLat:    parseLat,
-		planLat:     planLat,
-		runLat:      runLat,
-		serviceLat:  serviceLat,
-		overheadLat: overheadLat,
-	})
+	startTime := timeutil.Now()
+	stmtEx := StmtExecution{
+		StartTime:   startTime,
+		Stmt:        anonymizeStmt(stmt),
+		DistSQLUsed: distSQLUsed,
+		OptUsed:     optUsed,
+		RetryCount:  int64(retryCount),
+		NumRows:     int64(numRows),
+		Err:         err,
+		ParseLat:    parseLat,
+		PlanLat:     planLat,
+		RunLat:      runLat,
+		ServiceLat:  serviceLat,
+		OverheadLat: overheadLat,
+	}
+
+	log.Shout(context.Background(), log.Severity_ERROR, fmt.Sprintf("recording statement: %s",
+		stmtEx))
+
+	curAttempt := &ts.attempts[len(ts.attempts)-1]
+	curAttempt.Statements = append(curAttempt.Statements, stmtEx)
 }
 
 func (ts *txnStatsCollector) reset() {
 	ts.startTime = time.Time{}
-	ts.statements = ts.statements[:0]
+	ts.attempts = ts.attempts[:1]
+	ts.attempts[0].StartTime = time.Time{}
+	ts.attempts[0].Statements = ts.attempts[0].Statements[:0]
 }
 
 func (ts *txnStatsCollector) start() {
-	ts.startTime = timeutil.Now()
+	now := timeutil.Now()
+	ts.startTime = now
+	ts.attempts[0].StartTime = now
 }
 
-func (ts *txnStatsCollector) export() txnExecution {
-	return txnExecution{
-		startTime:  ts.startTime,
-		duration:   timeutil.Since(ts.startTime).Seconds(),
-		statements: ts.statements,
+func (ts *txnStatsCollector) restart() {
+	ts.attempts = append(ts.attempts, TxnAttempt{
+		StartTime:  timeutil.Now(),
+		Statements: make([]StmtExecution, 0, 10),
+	})
+}
+
+func (ts *txnStatsCollector) commit() TxnExecution {
+	return TxnExecution{
+		StartTime: ts.startTime,
+		Duration:  timeutil.Since(ts.startTime).Seconds(),
+		Attempts:  ts.attempts,
+		Aborted:   false,
 	}
+}
+
+func (ts *txnStatsCollector) abort() TxnExecution {
+	return TxnExecution{
+		StartTime: ts.startTime,
+		Duration:  timeutil.Since(ts.startTime).Seconds(),
+		Attempts:  ts.attempts,
+		Aborted:   true,
+	}
+}
+
+func (ts *txnStatsCollector) acceptAdvanceInfo(advInfo advanceInfo) []TxnExecution {
+	switch advInfo.txnEvent {
+	case txnStart:
+		ts.start()
+	case txnRestart:
+		ts.restart()
+	case txnCommit:
+		return []TxnExecution{ts.commit()}
+	case txnAborted:
+		return []TxnExecution{ts.abort()}
+	}
+
+	return nil
 }
