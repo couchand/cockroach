@@ -682,7 +682,7 @@ message StatementsResponse {
 }
 
 message StmtExecution {
-  google.protobuf.Timestamp start_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp end_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   string stmt = 2;
   bool distSQLUsed = 3;
   bool optUsed = 4;
@@ -697,12 +697,10 @@ message StmtExecution {
 }
 
 message TxnAttempt {
-  google.protobuf.Timestamp start_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   repeated StmtExecution statements = 2 [(gogoproto.nullable) = false];
 }
 
 message TxnExecution {
-  google.protobuf.Timestamp start_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   double duration = 2;
   bool aborted = 3;
   repeated TxnAttempt attempts = 4 [(gogoproto.nullable) = false];

@@ -26,7 +26,7 @@ import (
 // StmtExecution collects statistics related to the execution of a single
 // statement within a transaction.
 type StmtExecution struct {
-	StartTime   time.Time
+	EndTime     time.Time
 	Stmt        string
 	DistSQLUsed bool
 	OptUsed     bool
@@ -41,34 +41,29 @@ type StmtExecution struct {
 }
 
 type TxnAttempt struct {
-	StartTime  time.Time
 	Statements []StmtExecution
 }
 
 // TxnExecution collects statistics related to a transaction.
 type TxnExecution struct {
-	StartTime time.Time
-	Duration  float64
-	Aborted   bool
-	Attempts  []TxnAttempt
+	Duration float64
+	Aborted  bool
+	Attempts []TxnAttempt
 }
 
 // txnStatsCollector collects statistics related to a transaction.
 type txnStatsCollector struct {
-	startTime time.Time
-	attempts  []TxnAttempt
+	attempts []TxnAttempt
 }
 
 func newTxnStatsCollector() *txnStatsCollector {
 	attempts := []TxnAttempt{
 		TxnAttempt{
-			StartTime:  time.Time{},
 			Statements: make([]StmtExecution, 0, 10),
 		},
 	}
 	return &txnStatsCollector{
-		startTime: time.Time{},
-		attempts:  attempts,
+		attempts: attempts,
 	}
 }
 
@@ -81,13 +76,14 @@ func (ts *txnStatsCollector) recordStatement(
 	err error,
 	parseLat, planLat, runLat, serviceLat, overheadLat float64,
 ) {
-	if ts.startTime == (time.Time{}) {
-		log.Fatalf(context.Background(), "attempted to record a statement outside a transaction!")
-	}
-
-	startTime := timeutil.Now()
+	/*
+		if ts.startTime == (time.Time{}) {
+			log.Fatalf(context.Background(), "attempted to record a statement outside a transaction!")
+		}
+	*/
+	endTime := timeutil.Now()
 	stmtEx := StmtExecution{
-		StartTime:   startTime,
+		EndTime:     endTime,
 		Stmt:        anonymizeStmt(stmt),
 		DistSQLUsed: distSQLUsed,
 		OptUsed:     optUsed,
@@ -109,41 +105,40 @@ func (ts *txnStatsCollector) recordStatement(
 }
 
 func (ts *txnStatsCollector) reset() {
-	ts.startTime = time.Time{}
 	ts.attempts = ts.attempts[:1]
-	ts.attempts[0].StartTime = time.Time{}
 	ts.attempts[0].Statements = ts.attempts[0].Statements[:0]
 }
 
 func (ts *txnStatsCollector) start() {
-	now := timeutil.Now()
-	ts.startTime = now
-	ts.attempts[0].StartTime = now
 }
 
 func (ts *txnStatsCollector) restart() {
 	ts.attempts = append(ts.attempts, TxnAttempt{
-		StartTime:  timeutil.Now(),
 		Statements: make([]StmtExecution, 0, 10),
 	})
 }
 
-func (ts *txnStatsCollector) commit() TxnExecution {
+func (ts *txnStatsCollector) record(aborted bool) TxnExecution {
+	if len(ts.attempts[0].Statements) == 0 {
+		return TxnExecution{}
+	}
+
+	firstStmt := ts.attempts[0].Statements[0]
+	postLat := timeutil.Since(firstStmt.EndTime).Seconds()
+	duration := postLat + firstStmt.ServiceLat
 	return TxnExecution{
-		StartTime: ts.startTime,
-		Duration:  timeutil.Since(ts.startTime).Seconds(),
-		Attempts:  ts.attempts,
-		Aborted:   false,
+		Duration: duration,
+		Attempts: ts.attempts,
+		Aborted:  aborted,
 	}
 }
 
+func (ts *txnStatsCollector) commit() TxnExecution {
+	return ts.record(false /* aborted */)
+}
+
 func (ts *txnStatsCollector) abort() TxnExecution {
-	return TxnExecution{
-		StartTime: ts.startTime,
-		Duration:  timeutil.Since(ts.startTime).Seconds(),
-		Attempts:  ts.attempts,
-		Aborted:   true,
-	}
+	return ts.record(true /* aborted */)
 }
 
 func (ts *txnStatsCollector) acceptAdvanceInfo(advInfo advanceInfo) []TxnExecution {

@@ -257,7 +257,7 @@ type Server struct {
 	// updates.
 	dbCache *databaseCacheHolder
 
-	// txnStats tracks transaction statistics.
+	// TxnStats tracks transaction statistics.
 	TxnStats []TxnExecution
 }
 
@@ -1975,7 +1975,9 @@ func (ex *connExecutor) txnStateTransitionsApplyWrapper(
 	*/
 	if flush := ex.extraTxnState.txnStats.acceptAdvanceInfo(advInfo); flush != nil {
 		ex.server.TxnStats = append(ex.server.TxnStats, flush...)
-		log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.TxnStats)
+		//		log.Shout(context.Background(), log.Severity_INFO, "txn stats now: %s", ex.server.TxnStats)
+	} else if implicitTxn {
+		ex.server.TxnStats = append(ex.server.TxnStats, ex.extraTxnState.txnStats.commit())
 	}
 
 	return advInfo, nil
