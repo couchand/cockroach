@@ -28,13 +28,14 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/cockroachdb/cockroach/pkg/base"
+	"github.com/cockroachdb/cockroach/pkg/server/serverpb"
 	"github.com/cockroachdb/cockroach/pkg/util/envutil"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 )
 
 const (
 	debugInfoMessage = `# Welcome to the cockroach debug interface.
-# For help, try: \?, \h, or \h [CMD].
+# For help, try: \?, \h, or \h [NAME].
 # To exit: CTRL + D or \q.
 #
 `
@@ -132,11 +133,28 @@ func (s *shellState) addHistory(line string) {
 	}
 }
 
-func (s *shellState) GetCompletions(_ string) []string {
-	line, _ := s.ins.GetLineInfo()
+func (s *shellState) GetCompletions(needle string) []string {
+	results := make([]string, 0)
+	if strings.HasPrefix("problemranges", needle) {
+		results = append(results, "problemranges")
+	}
+	if strings.HasPrefix("range", needle) {
+		results = append(results, "range")
+	}
 
-	fmt.Fprintf(s.ins.Stdout(),
-		"\ntab completion not supported;\n\n%s", line)
+	if len(results) == 0 {
+		return nil
+	}
+	if len(results) == 1 {
+		return results
+	}
+
+	fmt.Fprint(stderr, "\n")
+	for res := range results {
+		fmt.Fprintf(stderr, "%v ", results[res])
+	}
+	fmt.Fprint(stderr, "\n\n")
+
 	return nil
 }
 
@@ -263,7 +281,37 @@ func (s *shellState) pipeSyscmd(line string, nextState, errState shellStateEnum)
 }
 
 func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum) shellStateEnum {
-	fmt.Println("Help not yet available.  You are on your own.")
+	line = strings.Trim(line, " \r\n\t\f")
+	cmd := strings.Fields(line)
+
+	if len(cmd) == 0 {
+		fmt.Println("Available commands:")
+		fmt.Println()
+		fmt.Println("  problemranges")
+		fmt.Println("  range")
+		fmt.Println()
+		fmt.Println("Use \\h [NAME] for more details about a particular command, or")
+		fmt.Println("try \\? for help with shell features.")
+		return nextState
+	}
+
+	switch cmd[0] {
+	case "problemranges":
+		fmt.Println("Usage: problemranges")
+		fmt.Println()
+		fmt.Println("Load the problem ranges report to investigate underreplicated")
+		fmt.Println("and unavailable ranges and other problems.")
+		return nextState
+
+	case "range":
+		fmt.Println("Usage: range <range_id>")
+		fmt.Println()
+		fmt.Println("View all status details about a range.")
+		return nextState
+
+	}
+
+	fmt.Println("No help available for: %v (is that a command?)", cmd[0])
 	return errState
 }
 
@@ -316,24 +364,78 @@ func (s *shellState) doHandleCliCmd(loopState, nextState shellStateEnum) shellSt
 }
 
 func (s *shellState) doPrepareCmd(startState, runState shellStateEnum) shellStateEnum {
+	line := strings.Trim(s.lastInputLine, " \r\n\t\f")
+	if line == "" {
+		return startState
+	}
+
 	s.addHistory(s.lastInputLine)
 
 	return runState
 }
 
 func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
-	fmt.Println("THIS IS WHERE THE MAGIC HAPPENS!")
+	cmd := strings.Fields(s.lastInputLine)
+	switch cmd[0] {
+	case "problemranges":
+		s.runProblemRanges(cmd[1:])
 
-	fmt.Printf("Executing debug command: %s", s.lastInputLine)
-	fmt.Println()
+	case "range":
+		s.runRange(cmd[1:])
 
-	s.exitErr = nil
+	default:
+		fmt.Fprintf(stderr, "Unknown command: %v\n", cmd[0])
+	}
 
-	if s.errExit && s.exitErr != nil {
-		return shellStop
+	if s.exitErr != nil {
+		fmt.Fprintf(stderr, "Error: %s\n", s.exitErr)
+
+		if s.errExit {
+			return shellStop
+		} else {
+			s.exitErr = nil
+		}
 	}
 
 	return startState
+}
+
+func (s *shellState) runProblemRanges(args []string) {
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if problems, err := status.ProblemRanges(ctx, &serverpb.ProblemRangesRequest{}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Problem Ranges:\n%#v\n", problems)
+	}
+}
+
+func (s *shellState) runRange(args []string) {
+
+	if len(args) != 1 {
+		s.invalidSyntax(shellStop, "%s.  Try: range [RANGE_ID]", s.lastInputLine)
+		return
+	}
+
+	rangeId, err := parseRangeID(args[0])
+	if err != nil {
+		s.exitErr = err
+		return
+	}
+
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if report, err := status.Range(ctx, &serverpb.RangeRequest{RangeId: int64(rangeId)}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Range %v:\n%#v\n", rangeId, report)
+	}
 }
 
 func runDebugInteractive(conn *grpc.ClientConn) error {
