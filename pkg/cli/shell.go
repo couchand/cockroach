@@ -142,6 +142,14 @@ type shellCommand struct {
 
 var commands = []shellCommand{
 	shellCommand{
+		name: "cluster",
+		help: `
+
+Get basic information about the cluster.
+`,
+		fn: runCluster,
+	},
+	shellCommand{
 		name: "nodes",
 		help: `
 
@@ -472,6 +480,19 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	}
 
 	return startState
+}
+
+func runCluster(s *shellState, args []string) {
+	admin := serverpb.NewAdminClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if cluster, err := admin.Cluster(ctx, &serverpb.ClusterRequest{}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Cluster:\n%#v\n", cluster)
+	}
 }
 
 func runNodes(s *shellState, args []string) {
