@@ -134,28 +134,84 @@ func (s *shellState) addHistory(line string) {
 	}
 }
 
+type shellCommand struct {
+	name string
+	help string
+	fn   func(*shellState, []string)
+}
+
+var commands = []shellCommand{
+	shellCommand{
+		name: "nodes",
+		help: `
+
+View all nodes in the cluster.
+`,
+		fn: runNodes,
+	},
+	shellCommand{
+		name: "node",
+		help: `<node_id>
+
+View details about a particular node.
+`,
+		fn: runNode,
+	},
+	shellCommand{
+		name: "problem_ranges",
+		help: `
+
+Load the problem ranges report to investigate underreplicated and unavailable ranges
+and other problems and potential issues.
+`,
+		fn: runProblemRanges,
+	},
+	shellCommand{
+		name: "range",
+		help: ` <range_id>
+
+View all status details about a range.
+`,
+		fn: runRange,
+	},
+	shellCommand{
+		name: "sessions",
+		help: ` [username]
+
+View active sessions across all nodes.
+If a username is provided and you are not root, it must be your own username.
+If you are root and no username is provided, list all sessions.
+`,
+		fn: runSessions,
+	},
+	shellCommand{
+		name: "local_sessions",
+		help: ` [username]
+
+View active sessions on this node.
+If a username is provided and you are not root, it must be your own username.
+If you are root and no username is provided, list all sessions.
+`,
+		fn: runLocalSessions,
+	},
+	shellCommand{
+		name: "cancel_session",
+		help: `<session_id> <username>
+
+Cancel an active session.
+`,
+		fn: runCancelSession,
+	},
+}
+
 func (s *shellState) GetCompletions(needle string) []string {
 	results := make([]string, 0)
-	if strings.HasPrefix("nodes", needle) {
-		results = append(results, "nodes")
-	}
-	if strings.HasPrefix("node", needle) {
-		results = append(results, "node")
-	}
-	if strings.HasPrefix("problem_ranges", needle) {
-		results = append(results, "problem_ranges")
-	}
-	if strings.HasPrefix("range", needle) {
-		results = append(results, "range")
-	}
-	if strings.HasPrefix("sessions", needle) {
-		results = append(results, "sessions")
-	}
-	if strings.HasPrefix("local_sessions", needle) {
-		results = append(results, "local_sessions")
-	}
-	if strings.HasPrefix("cancel_session", needle) {
-		results = append(results, "cancel_session")
+
+	for i := range commands {
+		command := commands[i]
+		if strings.HasPrefix(command.name, needle) {
+			results = append(results, command.name)
+		}
 	}
 
 	if len(results) == 0 {
@@ -303,71 +359,24 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 	if len(cmd) == 0 {
 		fmt.Println("Available commands:")
 		fmt.Println()
-		fmt.Println("  nodes")
-		fmt.Println("  node")
-		fmt.Println("  problem_ranges")
-		fmt.Println("  range")
-		fmt.Println("  sessions")
-		fmt.Println("  local_sessions")
-		fmt.Println("  cancel_session")
+
+		for i := range commands {
+			fmt.Printf("  %v\n", commands[i].name)
+		}
 		fmt.Println()
 		fmt.Println("Use \\h [NAME] for more details about a particular command, or")
 		fmt.Println("try \\? for help with shell features.")
 		return nextState
 	}
 
-	switch cmd[0] {
-	case "nodes":
-		fmt.Println("Usage: nodes")
-		fmt.Println()
-		fmt.Println("View all nodes in the cluster.")
-		return nextState
-
-	case "node":
-		fmt.Println("Usage: node <node_id>")
-		fmt.Println()
-		fmt.Println("View details about a particular node.")
-		return nextState
-
-	case "problem_ranges":
-		fmt.Println("Usage: problem_ranges")
-		fmt.Println()
-		fmt.Println("Load the problem ranges report to investigate underreplicated")
-		fmt.Println("and unavailable ranges and other problems.")
-		return nextState
-
-	case "range":
-		fmt.Println("Usage: range <range_id>")
-		fmt.Println()
-		fmt.Println("View all status details about a range.")
-		return nextState
-
-	case "sessions":
-		fmt.Println("Usage: sessions [username]")
-		fmt.Println()
-		fmt.Println("View active sessions across all nodes.")
-		fmt.Println("If a username is provided and you are not root, it must be your")
-		fmt.Println("own username.")
-		fmt.Println("If you are root and no username is provided, lists all sessions.")
-		return nextState
-
-	case "local_sessions":
-		fmt.Println("Usage: local_sessions [username]")
-		fmt.Println()
-		fmt.Println("View active sessions on this node.")
-		fmt.Println("If a username is provided and you are not root, it must be your")
-		fmt.Println("own username.")
-		fmt.Println("If you are root and no username is provided, lists all sessions.")
-		return nextState
-
-	case "cancel_session":
-		fmt.Println("Usage: cancel_session <session_id> <username>")
-		fmt.Println()
-		fmt.Println("Cancel an active session.")
-		return nextState
+	for i := range commands {
+		if cmd[0] == commands[i].name {
+			fmt.Printf("Usage: %v %v", commands[i].name, commands[i].help)
+			return nextState
+		}
 	}
 
-	fmt.Println("No help available for: %v (is that a command?)", cmd[0])
+	fmt.Printf("No help available for: %v (is that a command?)\n", cmd[0])
 	return errState
 }
 
@@ -432,31 +441,25 @@ func (s *shellState) doPrepareCmd(startState, runState shellStateEnum) shellStat
 
 func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	cmd := strings.Fields(s.lastInputLine)
-	switch cmd[0] {
-	case "nodes":
-		s.runNodes(cmd[1:])
 
-	case "node":
-		s.runNode(cmd[1:])
-
-	case "problem_ranges":
-		s.runProblemRanges(cmd[1:])
-
-	case "range":
-		s.runRange(cmd[1:])
-
-	case "sessions":
-		s.runSessions(cmd[1:])
-
-	case "local_sessions":
-		s.runLocalSessions(cmd[1:])
-
-	case "cancel_session":
-		s.runCancelSession(cmd[1:])
-
-	default:
-		fmt.Fprintf(stderr, "Unknown command: %v\n", cmd[0])
+	var fn func(*shellState, []string)
+	for i := range commands {
+		if cmd[0] == commands[i].name {
+			fn = commands[i].fn
+			break
+		}
 	}
+
+	if fn == nil {
+		fmt.Fprintf(stderr, "Unknown command: %v\n", cmd[0])
+		if s.errExit {
+			return shellStop
+		} else {
+			return startState
+		}
+	}
+
+	fn(s, cmd[1:])
 
 	if s.exitErr != nil {
 		fmt.Fprintf(stderr, "Error: %s\n", s.exitErr)
@@ -471,7 +474,7 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	return startState
 }
 
-func (s *shellState) runNodes(args []string) {
+func runNodes(s *shellState, args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -484,7 +487,7 @@ func (s *shellState) runNodes(args []string) {
 	}
 }
 
-func (s *shellState) runNode(args []string) {
+func runNode(s *shellState, args []string) {
 
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: node <node_id>", s.lastInputLine)
@@ -505,7 +508,7 @@ func (s *shellState) runNode(args []string) {
 	}
 }
 
-func (s *shellState) runProblemRanges(args []string) {
+func runProblemRanges(s *shellState, args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -518,7 +521,7 @@ func (s *shellState) runProblemRanges(args []string) {
 	}
 }
 
-func (s *shellState) runRange(args []string) {
+func runRange(s *shellState, args []string) {
 
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: range <range_id>", s.lastInputLine)
@@ -543,7 +546,7 @@ func (s *shellState) runRange(args []string) {
 	}
 }
 
-func (s *shellState) runSessions(args []string) {
+func runSessions(s *shellState, args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -561,7 +564,7 @@ func (s *shellState) runSessions(args []string) {
 	}
 }
 
-func (s *shellState) runLocalSessions(args []string) {
+func runLocalSessions(s *shellState, args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -579,7 +582,7 @@ func (s *shellState) runLocalSessions(args []string) {
 	}
 }
 
-func (s *shellState) runCancelSession(args []string) {
+func runCancelSession(s *shellState, args []string) {
 	if len(args) != 2 {
 		s.invalidSyntax(shellStop, "%s.  Try: cancel_session <session_id> <username>", s.lastInputLine)
 		return
