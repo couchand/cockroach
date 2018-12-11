@@ -29,6 +29,7 @@ import (
 
 	"github.com/cockroachdb/cockroach/pkg/base"
 	"github.com/cockroachdb/cockroach/pkg/server/serverpb"
+	"github.com/cockroachdb/cockroach/pkg/sql"
 	"github.com/cockroachdb/cockroach/pkg/util/envutil"
 	"github.com/cockroachdb/cockroach/pkg/util/log"
 )
@@ -152,6 +153,9 @@ func (s *shellState) GetCompletions(needle string) []string {
 	}
 	if strings.HasPrefix("local_sessions", needle) {
 		results = append(results, "local_sessions")
+	}
+	if strings.HasPrefix("cancel_session", needle) {
+		results = append(results, "cancel_session")
 	}
 
 	if len(results) == 0 {
@@ -303,6 +307,9 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 		fmt.Println("  node")
 		fmt.Println("  problem_ranges")
 		fmt.Println("  range")
+		fmt.Println("  sessions")
+		fmt.Println("  local_sessions")
+		fmt.Println("  cancel_session")
 		fmt.Println()
 		fmt.Println("Use \\h [NAME] for more details about a particular command, or")
 		fmt.Println("try \\? for help with shell features.")
@@ -344,13 +351,19 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 		fmt.Println("If you are root and no username is provided, lists all sessions.")
 		return nextState
 
-	case "Local_sessions":
+	case "local_sessions":
 		fmt.Println("Usage: local_sessions [username]")
 		fmt.Println()
 		fmt.Println("View active sessions on this node.")
 		fmt.Println("If a username is provided and you are not root, it must be your")
 		fmt.Println("own username.")
 		fmt.Println("If you are root and no username is provided, lists all sessions.")
+		return nextState
+
+	case "cancel_session":
+		fmt.Println("Usage: cancel_session <session_id> <username>")
+		fmt.Println()
+		fmt.Println("Cancel an active session.")
 		return nextState
 	}
 
@@ -438,6 +451,9 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	case "local_sessions":
 		s.runLocalSessions(cmd[1:])
 
+	case "cancel_session":
+		s.runCancelSession(cmd[1:])
+
 	default:
 		fmt.Fprintf(stderr, "Unknown command: %v\n", cmd[0])
 	}
@@ -461,10 +477,10 @@ func (s *shellState) runNodes(args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if problems, err := status.Nodes(ctx, &serverpb.NodesRequest{}); err != nil {
+	if nodes, err := status.Nodes(ctx, &serverpb.NodesRequest{}); err != nil {
 		s.exitErr = err
 	} else {
-		fmt.Printf("Nodes:\n%#v\n", problems)
+		fmt.Printf("Nodes:\n%#v\n", nodes)
 	}
 }
 
@@ -482,10 +498,10 @@ func (s *shellState) runNode(args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if report, err := status.Node(ctx, &serverpb.NodeRequest{NodeId: nodeId}); err != nil {
+	if node, err := status.Node(ctx, &serverpb.NodeRequest{NodeId: nodeId}); err != nil {
 		s.exitErr = err
 	} else {
-		fmt.Printf("Node %v:\n%#v\n", nodeId, report)
+		fmt.Printf("Node %v:\n%#v\n", nodeId, node)
 	}
 }
 
@@ -538,10 +554,10 @@ func (s *shellState) runSessions(args []string) {
 		username = args[0]
 	}
 
-	if problems, err := status.ListSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
+	if sessions, err := status.ListSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
 		s.exitErr = err
 	} else {
-		fmt.Printf("Sessions:\n%#v\n", problems)
+		fmt.Printf("Sessions:\n%#v\n", sessions)
 	}
 }
 
@@ -556,10 +572,40 @@ func (s *shellState) runLocalSessions(args []string) {
 		username = args[0]
 	}
 
-	if problems, err := status.ListLocalSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
+	if sessions, err := status.ListLocalSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
 		s.exitErr = err
 	} else {
-		fmt.Printf("Local Sessions:\n%#v\n", problems)
+		fmt.Printf("Local Sessions:\n%#v\n", sessions)
+	}
+}
+
+func (s *shellState) runCancelSession(args []string) {
+	if len(args) != 2 {
+		s.invalidSyntax(shellStop, "%s.  Try: cancel_session <session_id> <username>", s.lastInputLine)
+		return
+	}
+
+	username := args[1]
+
+	sessionId, err := sql.StringToClusterWideID(args[0])
+	if err != nil {
+		s.exitErr = err
+		return
+	}
+
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if result, err := status.CancelSession(ctx, &serverpb.CancelSessionRequest{
+		NodeId:    fmt.Sprintf("%d", sessionId.GetNodeID()),
+		SessionID: sessionId.GetBytes(),
+		Username:  username,
+	}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Cancel Session %v %v:\n%#v\n", sessionId, username, result)
 	}
 }
 
