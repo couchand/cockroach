@@ -150,6 +150,14 @@ Get basic information about the cluster.
 		fn: runCluster,
 	},
 	shellCommand{
+		name: "gossip",
+		help: `
+
+View all the values in a node's gossip instance.
+`,
+		fn: runGossip,
+	},
+	shellCommand{
 		name: "nodes",
 		help: `
 
@@ -495,6 +503,22 @@ func runCluster(s *shellState, args []string) {
 	}
 }
 
+func runGossip(s *shellState, args []string) {
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if gossipInfo, err := status.Gossip(ctx, &serverpb.GossipRequest{}); err != nil {
+		s.exitErr = err
+		return
+	} else if output, err := parseGossipValues(gossipInfo); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Gossip:\n%v\n", output)
+	}
+}
+
 func runNodes(s *shellState, args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
@@ -509,7 +533,6 @@ func runNodes(s *shellState, args []string) {
 }
 
 func runNode(s *shellState, args []string) {
-
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: node <node_id>", s.lastInputLine)
 		return
@@ -543,7 +566,6 @@ func runProblemRanges(s *shellState, args []string) {
 }
 
 func runRange(s *shellState, args []string) {
-
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: range <range_id>", s.lastInputLine)
 		return
