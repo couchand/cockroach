@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -316,11 +317,22 @@ func (s *shellState) doRefreshPrompt(nextState shellStateEnum) shellStateEnum {
 }
 
 func (s *shellState) doReadLine(nextState shellStateEnum) shellStateEnum {
-	l, err := s.ins.GetLine()
-	if len(l) > 0 && l[len(l)-1] == '\n' {
-		l = l[:len(l)-1]
+	var l string
+	var err error
+	if s.hasEditor() {
+		l, err = s.ins.GetLine()
+		if len(l) > 0 && l[len(l)-1] == '\n' {
+			l = l[:len(l)-1]
+		} else {
+			fmt.Fprintln(s.ins.Stdout())
+		}
 	} else {
-		fmt.Fprintln(s.ins.Stdout())
+		l, err = s.buf.ReadString('\n')
+		if err == io.EOF && len(l) != 0 {
+			err = nil
+		} else if err == nil {
+			l = l[:len(l)-1]
+		}
 	}
 
 	switch err {
@@ -337,6 +349,9 @@ func (s *shellState) doReadLine(nextState shellStateEnum) shellStateEnum {
 		}
 
 		s.exitErr = err
+		return shellStop
+
+	case io.EOF:
 		return shellStop
 
 	default:
