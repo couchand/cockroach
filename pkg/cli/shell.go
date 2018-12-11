@@ -147,6 +147,12 @@ func (s *shellState) GetCompletions(needle string) []string {
 	if strings.HasPrefix("range", needle) {
 		results = append(results, "range")
 	}
+	if strings.HasPrefix("sessions", needle) {
+		results = append(results, "sessions")
+	}
+	if strings.HasPrefix("local_sessions", needle) {
+		results = append(results, "local_sessions")
+	}
 
 	if len(results) == 0 {
 		return nil
@@ -329,6 +335,23 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 		fmt.Println("View all status details about a range.")
 		return nextState
 
+	case "sessions":
+		fmt.Println("Usage: sessions [username]")
+		fmt.Println()
+		fmt.Println("View active sessions across all nodes.")
+		fmt.Println("If a username is provided and you are not root, it must be your")
+		fmt.Println("own username.")
+		fmt.Println("If you are root and no username is provided, lists all sessions.")
+		return nextState
+
+	case "Local_sessions":
+		fmt.Println("Usage: local_sessions [username]")
+		fmt.Println()
+		fmt.Println("View active sessions on this node.")
+		fmt.Println("If a username is provided and you are not root, it must be your")
+		fmt.Println("own username.")
+		fmt.Println("If you are root and no username is provided, lists all sessions.")
+		return nextState
 	}
 
 	fmt.Println("No help available for: %v (is that a command?)", cmd[0])
@@ -408,6 +431,12 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 
 	case "range":
 		s.runRange(cmd[1:])
+
+	case "sessions":
+		s.runSessions(cmd[1:])
+
+	case "local_sessions":
+		s.runLocalSessions(cmd[1:])
 
 	default:
 		fmt.Fprintf(stderr, "Unknown command: %v\n", cmd[0])
@@ -495,6 +524,42 @@ func (s *shellState) runRange(args []string) {
 		s.exitErr = err
 	} else {
 		fmt.Printf("Range %v:\n%#v\n", rangeId, report)
+	}
+}
+
+func (s *shellState) runSessions(args []string) {
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	username := ""
+	if len(args) > 0 {
+		username = args[0]
+	}
+
+	if problems, err := status.ListSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Sessions:\n%#v\n", problems)
+	}
+}
+
+func (s *shellState) runLocalSessions(args []string) {
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	username := ""
+	if len(args) > 0 {
+		username = args[0]
+	}
+
+	if problems, err := status.ListLocalSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Local Sessions:\n%#v\n", problems)
 	}
 }
 
