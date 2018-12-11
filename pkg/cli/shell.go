@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	readline "github.com/knz/go-libedit"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -116,6 +117,7 @@ type shellState struct {
 	// State
 	exitErr       error
 	lastInputLine string
+	lastResult    proto.Message
 }
 
 func (s *shellState) hasEditor() bool {
@@ -137,7 +139,7 @@ func (s *shellState) addHistory(line string) {
 type shellCommand struct {
 	name string
 	help string
-	fn   func(*shellState, []string)
+	fn   func(*shellState, []string) proto.Message
 }
 
 var commands = []shellCommand{
@@ -477,7 +479,12 @@ func (s *shellState) doPrepareCmd(startState, runState shellStateEnum) shellStat
 func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	cmd := strings.Fields(s.lastInputLine)
 
-	var fn func(*shellState, []string)
+	if cmd[0] == "_" {
+		fmt.Printf("Last result:\n%#v\n", s.lastResult)
+		return startState
+	}
+
+	var fn func(*shellState, []string) proto.Message
 	for i := range commands {
 		if cmd[0] == commands[i].name {
 			fn = commands[i].fn
@@ -494,7 +501,7 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 		}
 	}
 
-	fn(s, cmd[1:])
+	res := fn(s, cmd[1:])
 
 	if s.exitErr != nil {
 		fmt.Fprintf(stderr, "Error: %s\n", s.exitErr)
@@ -504,12 +511,14 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 		} else {
 			s.exitErr = nil
 		}
+	} else {
+		s.lastResult = res
 	}
 
 	return startState
 }
 
-func runCluster(s *shellState, args []string) {
+func runCluster(s *shellState, args []string) proto.Message {
 	admin := serverpb.NewAdminClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -517,12 +526,14 @@ func runCluster(s *shellState, args []string) {
 
 	if cluster, err := admin.Cluster(ctx, &serverpb.ClusterRequest{}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Cluster:\n%#v\n", cluster)
+		return cluster
 	}
 }
 
-func runGossip(s *shellState, args []string) {
+func runGossip(s *shellState, args []string) proto.Message {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -530,15 +541,17 @@ func runGossip(s *shellState, args []string) {
 
 	if gossipInfo, err := status.Gossip(ctx, &serverpb.GossipRequest{}); err != nil {
 		s.exitErr = err
-		return
+		return nil
 	} else if output, err := parseGossipValues(gossipInfo); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Gossip:\n%v\n", output)
+		return gossipInfo
 	}
 }
 
-func runNodes(s *shellState, args []string) {
+func runNodes(s *shellState, args []string) proto.Message {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -546,15 +559,17 @@ func runNodes(s *shellState, args []string) {
 
 	if nodes, err := status.Nodes(ctx, &serverpb.NodesRequest{}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Nodes:\n%#v\n", nodes)
+		return nodes
 	}
 }
 
-func runNode(s *shellState, args []string) {
+func runNode(s *shellState, args []string) proto.Message {
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: node <node_id>", s.lastInputLine)
-		return
+		return nil
 	}
 
 	nodeId := args[0]
@@ -566,16 +581,18 @@ func runNode(s *shellState, args []string) {
 
 	if node, err := status.Node(ctx, &serverpb.NodeRequest{NodeId: nodeId}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Node %v:\n%#v\n", nodeId, node)
+		return node
 	}
 }
 
-func runDecommission(s *shellState, args []string) {
+func runDecommission(s *shellState, args []string) proto.Message {
 	nodeIDs, err := parseNodeIDs(args)
 	if err != nil {
 		s.exitErr = err
-		return
+		return nil
 	}
 
 	admin := serverpb.NewAdminClient(s.conn)
@@ -588,16 +605,18 @@ func runDecommission(s *shellState, args []string) {
 		Decommissioning: true,
 	}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Decommission %v:\n%#v\n", nodeIDs, resp)
+		return resp
 	}
 }
 
-func runRecommission(s *shellState, args []string) {
+func runRecommission(s *shellState, args []string) proto.Message {
 	nodeIDs, err := parseNodeIDs(args)
 	if err != nil {
 		s.exitErr = err
-		return
+		return nil
 	}
 
 	admin := serverpb.NewAdminClient(s.conn)
@@ -610,12 +629,14 @@ func runRecommission(s *shellState, args []string) {
 		Decommissioning: false,
 	}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Decommission %v:\n%#v\n", nodeIDs, resp)
+		return resp
 	}
 }
 
-func runProblemRanges(s *shellState, args []string) {
+func runProblemRanges(s *shellState, args []string) proto.Message {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -623,21 +644,23 @@ func runProblemRanges(s *shellState, args []string) {
 
 	if problems, err := status.ProblemRanges(ctx, &serverpb.ProblemRangesRequest{}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Problem Ranges:\n%#v\n", problems)
+		return problems
 	}
 }
 
-func runRange(s *shellState, args []string) {
+func runRange(s *shellState, args []string) proto.Message {
 	if len(args) != 1 {
 		s.invalidSyntax(shellStop, "%s.  Try: range <range_id>", s.lastInputLine)
-		return
+		return nil
 	}
 
 	rangeId, err := parseRangeID(args[0])
 	if err != nil {
 		s.exitErr = err
-		return
+		return nil
 	}
 
 	status := serverpb.NewStatusClient(s.conn)
@@ -647,12 +670,14 @@ func runRange(s *shellState, args []string) {
 
 	if report, err := status.Range(ctx, &serverpb.RangeRequest{RangeId: int64(rangeId)}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Range %v:\n%#v\n", rangeId, report)
+		return report
 	}
 }
 
-func runSessions(s *shellState, args []string) {
+func runSessions(s *shellState, args []string) proto.Message {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -665,12 +690,14 @@ func runSessions(s *shellState, args []string) {
 
 	if sessions, err := status.ListSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Sessions:\n%#v\n", sessions)
+		return sessions
 	}
 }
 
-func runLocalSessions(s *shellState, args []string) {
+func runLocalSessions(s *shellState, args []string) proto.Message {
 	status := serverpb.NewStatusClient(s.conn)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -683,15 +710,17 @@ func runLocalSessions(s *shellState, args []string) {
 
 	if sessions, err := status.ListLocalSessions(ctx, &serverpb.ListSessionsRequest{Username: username}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Local Sessions:\n%#v\n", sessions)
+		return sessions
 	}
 }
 
-func runCancelSession(s *shellState, args []string) {
+func runCancelSession(s *shellState, args []string) proto.Message {
 	if len(args) != 2 {
 		s.invalidSyntax(shellStop, "%s.  Try: cancel_session <session_id> <username>", s.lastInputLine)
-		return
+		return nil
 	}
 
 	username := args[1]
@@ -699,7 +728,7 @@ func runCancelSession(s *shellState, args []string) {
 	sessionId, err := sql.StringToClusterWideID(args[0])
 	if err != nil {
 		s.exitErr = err
-		return
+		return nil
 	}
 
 	status := serverpb.NewStatusClient(s.conn)
@@ -713,8 +742,10 @@ func runCancelSession(s *shellState, args []string) {
 		Username:  username,
 	}); err != nil {
 		s.exitErr = err
+		return nil
 	} else {
 		fmt.Printf("Cancel Session %v %v:\n%#v\n", sessionId, username, result)
+		return result
 	}
 }
 
