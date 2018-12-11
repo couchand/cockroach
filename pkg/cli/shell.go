@@ -174,6 +174,25 @@ View details about a particular node.
 		fn: runNode,
 	},
 	shellCommand{
+		name: "decommission",
+		help: `[node_id]
+
+Mark the node as decommissioning.  This will cause leases and replicas to be
+removed from this node.
+If the node ID is blank, applies to this node.
+`,
+		fn: runDecommission,
+	},
+	shellCommand{
+		name: "recommission",
+		help: `[node_id]
+
+Resets the node's decommissioning status, signaling the affected node to participate
+in the cluster again.
+`,
+		fn: runRecommission,
+	},
+	shellCommand{
 		name: "problem_ranges",
 		help: `
 
@@ -549,6 +568,50 @@ func runNode(s *shellState, args []string) {
 		s.exitErr = err
 	} else {
 		fmt.Printf("Node %v:\n%#v\n", nodeId, node)
+	}
+}
+
+func runDecommission(s *shellState, args []string) {
+	nodeIDs, err := parseNodeIDs(args)
+	if err != nil {
+		s.exitErr = err
+		return
+	}
+
+	admin := serverpb.NewAdminClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if resp, err := admin.Decommission(ctx, &serverpb.DecommissionRequest{
+		NodeIDs:         nodeIDs,
+		Decommissioning: true,
+	}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Decommission %v:\n%#v\n", nodeIDs, resp)
+	}
+}
+
+func runRecommission(s *shellState, args []string) {
+	nodeIDs, err := parseNodeIDs(args)
+	if err != nil {
+		s.exitErr = err
+		return
+	}
+
+	admin := serverpb.NewAdminClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if resp, err := admin.Decommission(ctx, &serverpb.DecommissionRequest{
+		NodeIDs:         nodeIDs,
+		Decommissioning: false,
+	}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Decommission %v:\n%#v\n", nodeIDs, resp)
 	}
 }
 
