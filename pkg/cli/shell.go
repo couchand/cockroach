@@ -135,8 +135,14 @@ func (s *shellState) addHistory(line string) {
 
 func (s *shellState) GetCompletions(needle string) []string {
 	results := make([]string, 0)
-	if strings.HasPrefix("problemranges", needle) {
-		results = append(results, "problemranges")
+	if strings.HasPrefix("nodes", needle) {
+		results = append(results, "nodes")
+	}
+	if strings.HasPrefix("node", needle) {
+		results = append(results, "node")
+	}
+	if strings.HasPrefix("problem_ranges", needle) {
+		results = append(results, "problem_ranges")
 	}
 	if strings.HasPrefix("range", needle) {
 		results = append(results, "range")
@@ -287,7 +293,9 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 	if len(cmd) == 0 {
 		fmt.Println("Available commands:")
 		fmt.Println()
-		fmt.Println("  problemranges")
+		fmt.Println("  nodes")
+		fmt.Println("  node")
+		fmt.Println("  problem_ranges")
 		fmt.Println("  range")
 		fmt.Println()
 		fmt.Println("Use \\h [NAME] for more details about a particular command, or")
@@ -296,8 +304,20 @@ func (s *shellState) handleHelp(line string, nextState, errState shellStateEnum)
 	}
 
 	switch cmd[0] {
-	case "problemranges":
-		fmt.Println("Usage: problemranges")
+	case "nodes":
+		fmt.Println("Usage: nodes")
+		fmt.Println()
+		fmt.Println("View all nodes in the cluster.")
+		return nextState
+
+	case "node":
+		fmt.Println("Usage: node <node_id>")
+		fmt.Println()
+		fmt.Println("View details about a particular node.")
+		return nextState
+
+	case "problem_ranges":
+		fmt.Println("Usage: problem_ranges")
 		fmt.Println()
 		fmt.Println("Load the problem ranges report to investigate underreplicated")
 		fmt.Println("and unavailable ranges and other problems.")
@@ -377,7 +397,13 @@ func (s *shellState) doPrepareCmd(startState, runState shellStateEnum) shellStat
 func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	cmd := strings.Fields(s.lastInputLine)
 	switch cmd[0] {
-	case "problemranges":
+	case "nodes":
+		s.runNodes(cmd[1:])
+
+	case "node":
+		s.runNode(cmd[1:])
+
+	case "problem_ranges":
 		s.runProblemRanges(cmd[1:])
 
 	case "range":
@@ -400,6 +426,40 @@ func (s *shellState) doRunCmd(startState shellStateEnum) shellStateEnum {
 	return startState
 }
 
+func (s *shellState) runNodes(args []string) {
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if problems, err := status.Nodes(ctx, &serverpb.NodesRequest{}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Nodes:\n%#v\n", problems)
+	}
+}
+
+func (s *shellState) runNode(args []string) {
+
+	if len(args) != 1 {
+		s.invalidSyntax(shellStop, "%s.  Try: node <node_id>", s.lastInputLine)
+		return
+	}
+
+	nodeId := args[0]
+
+	status := serverpb.NewStatusClient(s.conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if report, err := status.Node(ctx, &serverpb.NodeRequest{NodeId: nodeId}); err != nil {
+		s.exitErr = err
+	} else {
+		fmt.Printf("Node %v:\n%#v\n", nodeId, report)
+	}
+}
+
 func (s *shellState) runProblemRanges(args []string) {
 	status := serverpb.NewStatusClient(s.conn)
 
@@ -416,7 +476,7 @@ func (s *shellState) runProblemRanges(args []string) {
 func (s *shellState) runRange(args []string) {
 
 	if len(args) != 1 {
-		s.invalidSyntax(shellStop, "%s.  Try: range [RANGE_ID]", s.lastInputLine)
+		s.invalidSyntax(shellStop, "%s.  Try: range <range_id>", s.lastInputLine)
 		return
 	}
 
